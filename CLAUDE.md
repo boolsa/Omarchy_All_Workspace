@@ -60,7 +60,8 @@ hyprctl activewindow -j | jq -r '.address, .workspace.id'
 ```
 
 **Live loading.**
-- The deploy clone is `~/.config/omarchy/plugins/boolsa.overview`. Update it by committing here, then running `git -C ~/.config/omarchy/plugins/boolsa.overview pull`; the shell hot-reloads.
+- The deploy clone is `~/.config/omarchy/plugins/boolsa.overview`. Update it by committing here, then running `git -C ~/.config/omarchy/plugins/boolsa.overview pull`.
+- **Overlay code does not hot-reload.** The shell notices the change ("Local plugin changed, reloading"), but the next summon still builds the old cached `Overview.qml`/`Model.js`. This happens with or without `keepLoaded`, and `rescanPlugins` doesn't help. After pulling overlay changes, run `omarchy restart shell` (the bar blinks once).
 - Don't symlink the project into the plugins directory. The watcher doesn't follow symlinks, and `omarchy plugin validate` rejects them.
 - Shell warnings and errors go to the journal: `journalctl --user -o cat _COMM=quickshell -n 50 --no-pager`.
 

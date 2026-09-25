@@ -33,13 +33,16 @@ Item {
   property string cardsKey: ""
   property string selectedAddress: ""
   property string openedActiveAddress: ""
+  // Until the user moves the highlight, every rebuild re-derives it: the
+  // first build on open runs on lastIpcObjects from before the refresh reply.
+  property bool selectionTouched: false
   readonly property int selectedIndex: indexOfAddress(selectedAddress)
 
-  // Shares the [menu] surface tokens with the first-party overlays so themes
-  // that style the menu also style the overview.
   // The menu scrim is tuned for a small card; a full-screen grid of
   // thumbnails needs the desktop behind it dimmed much further to read.
   property color scrim: Util.alpha(Color.menu.scrim, Math.max(Color.menu.scrim.a, 0.85))
+  // Otherwise shares the [menu] surface tokens with the first-party overlays
+  // so themes that style the menu also style the overview.
   property color surface: Color.menu.background
   property color foreground: Color.menu.text
   property color accent: Color.accent
@@ -75,6 +78,7 @@ Item {
     root.openedActiveAddress = Hyprland.activeToplevel
       ? Model.normalizeAddress(Hyprland.activeToplevel.address) : ""
     root.selectedAddress = ""
+    root.selectionTouched = false
     Hyprland.refreshMonitors()
     Hyprland.refreshWorkspaces()
     Hyprland.refreshToplevels()
@@ -125,13 +129,13 @@ Item {
     }
 
     var clients = root.ipcObjects(Hyprland.toplevels)
-    if (!root.openedActiveAddress) root.openedActiveAddress = Model.mostRecentAddress(clients)
+    var activeAddress = Model.resolveActiveAddress(clients, root.openedActiveAddress)
 
     var cards = Model.buildOverview(
       clients,
       root.ipcObjects(Hyprland.workspaces),
       root.ipcObjects(Hyprland.monitors),
-      { activeWorkspaceId: activeWorkspaceId, activeAddress: root.openedActiveAddress })
+      { activeWorkspaceId: activeWorkspaceId, activeAddress: activeAddress })
 
     // Refresh replies re-emit lastIpcObject even when nothing moved; keep the
     // delegates (and their captured frames) unless the model really changed.
@@ -143,8 +147,8 @@ Item {
       root.flat = Model.flattenWindows(cards)
     }
 
-    if (root.indexOfAddress(root.selectedAddress) < 0) {
-      var start = Model.initialIndex(root.flat, root.openedActiveAddress)
+    if (!root.selectionTouched || root.indexOfAddress(root.selectedAddress) < 0) {
+      var start = Model.initialIndex(root.flat, activeAddress)
       root.selectedAddress = start >= 0 ? root.flat[start].address : ""
     }
   }
@@ -189,11 +193,13 @@ Item {
   function selectIndex(index) {
     if (index < 0 || index >= root.flat.length) return
     root.selectedAddress = root.flat[index].address
+    root.selectionTouched = true
     gate.reset()
   }
 
   function selectAddress(address) {
     root.selectedAddress = address
+    root.selectionTouched = true
   }
 
   function moveSelection(dir) {

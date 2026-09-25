@@ -110,7 +110,7 @@ function shuffled(list, seed) {
 test('Model.js exposes the functions the QML depends on', () => {
   const names = ['normalizeAddress', 'isSpecialWorkspace', 'workspaceLabel', 'workAreaFor', 'relativeRect',
     'buildOverview', 'gridLayout', 'flattenWindows', 'initialIndex', 'navigate', 'stepIndex',
-    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd', 'mostRecentAddress'];
+    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd', 'mostRecentAddress', 'resolveActiveAddress'];
   for (const name of names) assert.equal(typeof M[name], 'function', name);
 });
 
@@ -772,6 +772,24 @@ test('mostRecentAddress picks the drawable client with the lowest focusHistoryID
   for (const value of [undefined, null, [], [null, {}], [{address: '0xa1', workspace: {id: 1}}]]) {
     assert.equal(M.mostRecentAddress(value), '', 'for ' + JSON.stringify(value));
   }
+});
+
+test('resolveActiveAddress keeps a drawable preferred window, else falls back to focus history', () => {
+  const clients = [
+    {address: '0xa1', workspace: {id: 1}, focusHistoryID: 1},
+    {address: '0xb2', workspace: {id: 2}, focusHistoryID: 0},
+    {address: '0xc3', hidden: true, workspace: {id: 2}, focusHistoryID: 2},
+  ];
+  assert.equal(M.resolveActiveAddress(clients, 'A1'), '0xa1');
+  assert.equal(M.resolveActiveAddress(clients, '0xa1'), '0xa1');
+  // Not drawn (hidden tab), unknown, or missing: most recent drawable wins.
+  assert.equal(M.resolveActiveAddress(clients, '0xc3'), '0xb2');
+  assert.equal(M.resolveActiveAddress(clients, '0xdead'), '0xb2');
+  assert.equal(M.resolveActiveAddress(clients, ''), '0xb2');
+  assert.equal(M.resolveActiveAddress(clients, null), '0xb2');
+  // lastIpcObject is {} for toplevels the shell has not refreshed yet.
+  assert.equal(M.resolveActiveAddress([{}, {}], '0xa1'), '');
+  assert.equal(M.resolveActiveAddress(null, '0xa1'), '');
 });
 
 // ---- navigate --------------------------------------------------------------

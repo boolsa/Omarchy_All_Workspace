@@ -87,7 +87,7 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   - `property var shell`, `property var manifest`, `property bool opened`.
   - `open(payloadJson)`, `close()`, and `dismiss()`, which calls `shell.hide(manifest.id)`.
   - `PanelWindow { visible: root.opened; anchors all; WlrLayershell.namespace: "boolsa-overview"; layer: WlrLayer.Overlay; keyboardFocus: WlrKeyboardFocus.Exclusive; exclusionMode: ExclusionMode.Ignore }` with a scrim `Rectangle` and a `MouseArea` on the scrim that dismisses.
-- **Load on demand, no `keepLoaded`.** The first design used `keepLoaded: true` for an instant open, but that broke hot reload (see *Spike results*). Without it the shell creates the overlay on summon and destroys it on hide. So when closed it holds no captures and no memory, and every open builds the model fresh.
+- **Load on demand, no `keepLoaded`.** The shell creates the overlay on summon and destroys it on hide. So when closed it holds no captures and no memory, and every open builds the model fresh. The component is cached after the first open, so later opens only instantiate the tree.
 - **Routing:** because the manifest has both kinds, `omarchy-shell shell toggle boolsa.overview` goes to the overlay loader (`shell.qml:1138-1150`). One command works for both the keybinding and the bar button.
 - **Which screen:** the overlay goes on the focused monitor. Pick the entry in `Quickshell.screens` whose name matches `Hyprland.focusedMonitor.name`; the pattern is in `Bar.qml:716-719`.
 
@@ -190,7 +190,16 @@ Settled on the live machine with the step-1 spike overlay:
   - No `hyprctl` fallback is needed.
 - **(d) Routing.** `omarchy-shell shell toggle boolsa.overview` reaches the overlay. `omarchy-shell shell call boolsa.overview <method> <arg>` reaches overlay methods, which is useful for scripted checks. `omarchy plugin enable boolsa.overview --section left` placed the bar button right after `omarchy.workspaces`.
 
-- **(e) Hot reload vs `keepLoaded`.** With `keepLoaded: true`, pulling a new `Overview.qml` never replaced the running spike, even after `omarchy-shell shell rescanPlugins`. `shell.qml` `reloadPlugins()` clears the component cache while the old keep-loaded instance is still alive, so the new Loader gets the cached old component. First-party keepLoaded overlays never change, so they never hit this. The fix is to drop `keepLoaded` and let the shell load the overlay on summon. After that change, one `omarchy restart shell` flushed the stuck instance.
+- **(e) Overlay hot reload doesn't work.**
+  - What happens: after a pull the shell logs "Local plugin changed, reloading", but the next summon still builds the old `Overview.qml` and `Model.js`.
+  - Seen first with `keepLoaded: true`, then again without it. `omarchy-shell shell rescanPlugins` doesn't help either.
+  - Likely cause: `shell.qml` `reloadPlugins()` relies on `Qt.clearComponentCache()`, which keeps any component still referenced when it runs. The entry-point URL has no cache-busting.
+  - Workaround: after pulling overlay changes, run `omarchy restart shell`.
+  - `keepLoaded` stays off anyway, because the lifecycle is simpler and nothing lives while the overlay is closed.
+- **(f) The first build on open uses old window data.**
+  - `open()` rebuilds from `lastIpcObject`s before the refresh replies land. A restarted shell may have none yet, and `Hyprland.activeToplevel` is null until its first event.
+  - So the starting highlight is recomputed on every rebuild until the user moves it (`selectionTouched`).
+  - The active window comes from `Model.resolveActiveAddress`: the preferred window if it is drawn, otherwise the lowest `focusHistoryID`.
 
 ## Verification
 

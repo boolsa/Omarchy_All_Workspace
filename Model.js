@@ -424,6 +424,21 @@ function mostRecentAddress(clients) {
   return best;
 }
 
+// The window the overview should treat as active: `preferred` (normally
+// Hyprland.activeToplevel) when it is a drawable client, else the most
+// recently focused drawable one. activeToplevel can point at a window that
+// has no refreshed lastIpcObject yet, or be null after a shell restart.
+function resolveActiveAddress(clients, preferred) {
+  var target = normalizeAddress(preferred);
+  var list = asList(clients);
+  if (target !== "") {
+    for (var i = 0; i < list.length; i++) {
+      if (isDrawable(list[i]) && normalizeAddress(list[i].address) === target) return target;
+    }
+  }
+  return mostRecentAddress(list);
+}
+
 function initialIndex(flat, activeAddress) {
   var list = asList(flat);
   if (list.length === 0) return -1;
