@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "boolsa.overview",
+  "name": "Overview",
+  "version": "0.1.0",
+  "author": "boolsa",
+  "license": "MIT",
+  "description": "Mission Control for Hyprland: every workspace as a miniature of the screen, with each window clickable to jump straight to it.",
+  "kinds": ["overlay", "bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Overview.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Overview",
+    "description": "Open the all-windows overview",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaultSection": "left"
+  }
+}
