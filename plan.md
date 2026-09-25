@@ -55,7 +55,7 @@ Compared with a compiled plugin:
 The repo root is the plugin directory, the same convention as `004_Unifi_Plugin` and `boolsa.todo`.
 
 ```
-~/Projects/009_Omarchy_All_Windows/        (git init; plugin id boolsa.overview)
+./                             (plugin id boolsa.overview)
   manifest.json      kinds ["overlay","bar-widget"], loaded on demand,
                      entryPoints { overlay: "Overview.qml", barWidget: "BarWidget.qml" },
                      barWidget { displayName "Overview", category "Compositor", defaultSection "left" }
@@ -77,7 +77,13 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 ```
 
 **Deploying it:**
-- Run `git clone ~/Projects/009_Omarchy_All_Windows ~/.config/omarchy/plugins/boolsa.overview`. To update, commit, then `git -C ~/.config/omarchy/plugins/boolsa.overview pull`.
+- Users install with `omarchy plugin add https://github.com/boolsa/Omarchy_All_Workspace.git --enable`.
+  That clones the repo, validates the manifest, and installs it as
+  `~/.config/omarchy/plugins/boolsa.overview` (the folder name comes from the
+  manifest `id`, not the repo name). Updates go through
+  `omarchy plugin update boolsa.overview`.
+- Local dev alternative: `git clone <repo-url> ~/.config/omarchy/plugins/boolsa.overview`.
+  To update that clone, commit, then `git -C ~/.config/omarchy/plugins/boolsa.overview pull`.
 - **Don't use a symlink.** The shell's inotify watcher doesn't follow symlinked plugin folders, so saves wouldn't hot-reload, and `omarchy-plugin-validate` rejects symlinks.
 
 ## How it works
@@ -160,7 +166,7 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 
 ## Build order
 
-0. **Save the plan.** You asked for this. Save this plan as `~/Projects/009_Omarchy_All_Windows/plan.md` as the first action after approval, then `git init`.
+0. **Save the plan.** You asked for this. Save this plan as `plan.md` in the repo root as the first action after approval, then `git init`.
 1. **Scaffold and spike.**
    - Build: the manifest and a bare `Overview.qml` that lists every toplevel with a small `ScreencopyView` and its title, plus the deploy clone. Run `omarchy plugin enable` and check the toggle works.
    - Settle the open questions on the real machine:
@@ -204,7 +210,7 @@ Settled on the live machine with the step-1 spike overlay:
 ## Verification
 
 ```bash
-cd ~/Projects/009_Omarchy_All_Windows
+cd <repo-checkout>
 node --test                                             # Model.js: layout math, filtering, ordering, nav, cmd builders, address validation
 /usr/lib/qt6/bin/qmllint *.qml                          # exit code is the gate; qs.* import warnings are expected
 omarchy plugin validate ~/Projects/009_Omarchy_All_Windows

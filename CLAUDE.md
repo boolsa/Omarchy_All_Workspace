@@ -9,7 +9,7 @@ Mission Control for Hyprland on Omarchy.
 `SUPER + `` or the bar button opens a fullscreen overlay that shows every workspace as a miniature of the screen.
 Each window sits at its real position and is individually clickable.
 Clicking a window closes the overlay and jumps to that workspace with that window focused.
-It is personal use on one laptop (eDP-1, 1920x1200), but multi-monitor input must not crash it.
+Originally built for one laptop (1920x1200), but multi-monitor input must not crash it.
 
 ## Layout (flat; repo root = plugin dir)
 
@@ -53,14 +53,16 @@ scripts/           capture-fixtures.sh (re-captures real fixtures, scrubbing tit
 ```bash
 node --test                                              # Model.js + source + repo rules (bare: Node 26 rejects a dir arg)
 /usr/lib/qt6/bin/qmllint *.qml                           # exit code is the gate; qs.* import warnings are expected
-omarchy plugin validate ~/Projects/009_Omarchy_All_Windows
+omarchy plugin validate .
 omarchy-shell shell toggle boolsa.overview               # open/close from the CLI
 omarchy-shell shell call boolsa.overview jump <address>  # scripted jump (address with or without 0x)
 hyprctl activewindow -j | jq -r '.address, .workspace.id'
 ```
 
 **Live loading.**
-- The deploy clone is `~/.config/omarchy/plugins/boolsa.overview`. Update it by committing here, then running `git -C ~/.config/omarchy/plugins/boolsa.overview pull`.
+- Users install via `omarchy plugin add https://github.com/boolsa/Omarchy_All_Workspace.git --enable`,
+  which lands in `~/.config/omarchy/plugins/boolsa.overview` (folder name from the manifest `id`).
+  Updates go through `omarchy plugin update boolsa.overview`.
 - **Overlay code does not hot-reload.** The shell notices the change ("Local plugin changed, reloading"), but the next summon still builds the old cached `Overview.qml`/`Model.js`. This happens with or without `keepLoaded`, and `rescanPlugins` doesn't help. After pulling overlay changes, run `omarchy restart shell` (the bar blinks once).
 - Don't symlink the project into the plugins directory. The watcher doesn't follow symlinks, and `omarchy plugin validate` rejects them.
 - Shell warnings and errors go to the journal: `journalctl --user -o cat _COMM=quickshell -n 50 --no-pager`.
