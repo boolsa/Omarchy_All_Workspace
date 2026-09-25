@@ -7,7 +7,6 @@
   "license": "MIT",
   "description": "Mission Control for Hyprland: every workspace as a miniature of the screen, with each window clickable to jump straight to it.",
   "kinds": ["overlay", "bar-widget"],
-  "keepLoaded": true,
   "entryPoints": {
     "overlay": "Overview.qml",
     "barWidget": "BarWidget.qml"

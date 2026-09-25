@@ -14,7 +14,7 @@ It is personal use on one laptop (eDP-1, 1920x1200), but multi-monitor input mus
 ## Layout (flat; repo root = plugin dir)
 
 ```
-manifest.json      id boolsa.overview · kinds [overlay, bar-widget] · keepLoaded
+manifest.json      id boolsa.overview · kinds [overlay, bar-widget] · loaded on demand (no keepLoaded)
 Overview.qml       overlay entry: open/close/dismiss/toggle, Hyprland wiring, keys, PanelWindow
 WorkspaceCard.qml  one workspace: header + miniature box; empty-space click activates the card
 WindowThumb.qml    one window: ScreencopyView snapshot, icon fallback, title chip, click to jump

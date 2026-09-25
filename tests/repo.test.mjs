@@ -43,8 +43,9 @@ test('manifest declares the overlay and bar-widget kinds and stays loaded', () =
   assert.ok(Array.isArray(m.kinds), 'kinds is an array');
   assert.ok(m.kinds.includes('overlay'), 'kinds includes overlay');
   assert.ok(m.kinds.includes('bar-widget'), 'kinds includes bar-widget');
-  // keepLoaded makes the overlay open instantly (see plan.md).
-  assert.equal(m.keepLoaded, true);
+  // Load on demand: a keepLoaded overlay survives hot reload as a stale cached
+  // component, so saved changes never appear (see plan.md).
+  assert.notEqual(m.keepLoaded, true);
 });
 
 test('manifest entry points are relative paths to files that exist', () => {

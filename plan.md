@@ -56,7 +56,7 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 
 ```
 ~/Projects/009_Omarchy_All_Windows/        (git init; plugin id boolsa.overview)
-  manifest.json      kinds ["overlay","bar-widget"], keepLoaded true,
+  manifest.json      kinds ["overlay","bar-widget"], loaded on demand,
                      entryPoints { overlay: "Overview.qml", barWidget: "BarWidget.qml" },
                      barWidget { displayName "Overview", category "Compositor", defaultSection "left" }
   Overview.qml       overlay entry: open()/close()/dismiss()/toggle(), `opened`, data refresh,
@@ -87,7 +87,7 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   - `property var shell`, `property var manifest`, `property bool opened`.
   - `open(payloadJson)`, `close()`, and `dismiss()`, which calls `shell.hide(manifest.id)`.
   - `PanelWindow { visible: root.opened; anchors all; WlrLayershell.namespace: "boolsa-overview"; layer: WlrLayer.Overlay; keyboardFocus: WlrKeyboardFocus.Exclusive; exclusionMode: ExclusionMode.Ignore }` with a scrim `Rectangle` and a `MouseArea` on the scrim that dismisses.
-- **Why `keepLoaded: true`:** the overlay then opens instantly. When it's closed it holds no captures, because the thumb Repeaters and Loaders are only active while `opened`.
+- **Load on demand, no `keepLoaded`.** The first design used `keepLoaded: true` for an instant open, but that broke hot reload (see *Spike results*). Without it the shell creates the overlay on summon and destroys it on hide. So when closed it holds no captures and no memory, and every open builds the model fresh.
 - **Routing:** because the manifest has both kinds, `omarchy-shell shell toggle boolsa.overview` goes to the overlay loader (`shell.qml:1138-1150`). One command works for both the keybinding and the bar button.
 - **Which screen:** the overlay goes on the focused monitor. Pick the entry in `Quickshell.screens` whose name matches `Hyprland.focusedMonitor.name`; the pattern is in `Bar.qml:716-719`.
 
@@ -189,6 +189,8 @@ Settled on the live machine with the step-1 spike overlay:
   - Focusing a window on a normal workspace again hides the scratchpad, because `binds:hide_special_on_workspace_change` is on.
   - No `hyprctl` fallback is needed.
 - **(d) Routing.** `omarchy-shell shell toggle boolsa.overview` reaches the overlay. `omarchy-shell shell call boolsa.overview <method> <arg>` reaches overlay methods, which is useful for scripted checks. `omarchy plugin enable boolsa.overview --section left` placed the bar button right after `omarchy.workspaces`.
+
+- **(e) Hot reload vs `keepLoaded`.** With `keepLoaded: true`, pulling a new `Overview.qml` never replaced the running spike, even after `omarchy-shell shell rescanPlugins`. `shell.qml` `reloadPlugins()` clears the component cache while the old keep-loaded instance is still alive, so the new Loader gets the cached old component. First-party keepLoaded overlays never change, so they never hit this. The fix is to drop `keepLoaded` and let the shell load the overlay on summon. After that change, one `omarchy restart shell` flushed the stuck instance.
 
 ## Verification
 
