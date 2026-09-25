@@ -405,6 +405,25 @@ function flattenWindows(cards) {
   return out;
 }
 
+// Address of the most recently focused drawable client (lowest
+// focusHistoryID), or "". Stands in for Hyprland.activeToplevel, which is
+// null until the first activewindow event after a shell restart.
+function mostRecentAddress(clients) {
+  var list = asList(clients);
+  var best = "";
+  var bestId = NO_FOCUS_HISTORY;
+  for (var i = 0; i < list.length; i++) {
+    var c = list[i];
+    if (!isDrawable(c)) continue;
+    var id = focusHistoryOf(c);
+    if (id < bestId) {
+      best = normalizeAddress(c.address);
+      bestId = id;
+    }
+  }
+  return best;
+}
+
 function initialIndex(flat, activeAddress) {
   var list = asList(flat);
   if (list.length === 0) return -1;

@@ -110,7 +110,7 @@ function shuffled(list, seed) {
 test('Model.js exposes the functions the QML depends on', () => {
   const names = ['normalizeAddress', 'isSpecialWorkspace', 'workspaceLabel', 'workAreaFor', 'relativeRect',
     'buildOverview', 'gridLayout', 'flattenWindows', 'initialIndex', 'navigate', 'stepIndex',
-    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd'];
+    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd', 'mostRecentAddress'];
   for (const name of names) assert.equal(typeof M[name], 'function', name);
 });
 
@@ -748,6 +748,30 @@ test('initialIndex finds the active window in any address format', () => {
   assert.equal(M.initialIndex(null, 'b2'), -1);
   assert.equal(M.initialIndex(undefined), -1);
   assert.equal(M.initialIndex([null, {address: 'b2'}], '0xb2'), 1);
+});
+
+test('mostRecentAddress picks the drawable client with the lowest focusHistoryID', () => {
+  const clients = [
+    {address: '0xa1', mapped: true, workspace: {id: 1}, focusHistoryID: 2},
+    {address: 'B2', mapped: true, workspace: {id: 2}, focusHistoryID: 0},
+    {address: '0xc3', mapped: true, workspace: {id: 3}, focusHistoryID: 1},
+  ];
+  assert.equal(M.mostRecentAddress(clients), '0xb2');
+  // Hidden tabs, unmapped windows and invalid workspaces never win.
+  assert.equal(M.mostRecentAddress([
+    {address: '0xd4', hidden: true, workspace: {id: 1}, focusHistoryID: 0},
+    {address: '0xe5', mapped: false, workspace: {id: 1}, focusHistoryID: 0},
+    {address: '0xf6', workspace: {id: -1}, focusHistoryID: 0},
+    {address: '0xa1', workspace: {id: 1}, focusHistoryID: 5},
+  ]), '0xa1');
+  // Negative ids mean "not in history" and lose to any real entry.
+  assert.equal(M.mostRecentAddress([
+    {address: '0xa1', workspace: {id: 1}, focusHistoryID: -1},
+    {address: '0xb2', workspace: {id: 1}, focusHistoryID: 3},
+  ]), '0xb2');
+  for (const value of [undefined, null, [], [null, {}], [{address: '0xa1', workspace: {id: 1}}]]) {
+    assert.equal(M.mostRecentAddress(value), '', 'for ' + JSON.stringify(value));
+  }
 });
 
 // ---- navigate --------------------------------------------------------------

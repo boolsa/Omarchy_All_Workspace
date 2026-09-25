@@ -37,7 +37,9 @@ Item {
 
   // Shares the [menu] surface tokens with the first-party overlays so themes
   // that style the menu also style the overview.
-  property color scrim: Color.menu.scrim
+  // The menu scrim is tuned for a small card; a full-screen grid of
+  // thumbnails needs the desktop behind it dimmed much further to read.
+  property color scrim: Util.alpha(Color.menu.scrim, Math.max(Color.menu.scrim.a, 0.85))
   property color surface: Color.menu.background
   property color foreground: Color.menu.text
   property color accent: Color.accent
@@ -122,8 +124,11 @@ Item {
       if (address) map[address] = values[i]
     }
 
+    var clients = root.ipcObjects(Hyprland.toplevels)
+    if (!root.openedActiveAddress) root.openedActiveAddress = Model.mostRecentAddress(clients)
+
     var cards = Model.buildOverview(
-      root.ipcObjects(Hyprland.toplevels),
+      clients,
       root.ipcObjects(Hyprland.workspaces),
       root.ipcObjects(Hyprland.monitors),
       { activeWorkspaceId: activeWorkspaceId, activeAddress: root.openedActiveAddress })
