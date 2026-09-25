@@ -1,0 +1,17 @@
+{
+  "description": "A 3-tab group on workspace 3: one visible member and two hidden (inactive tab) members that all share the same grouped array, next to an ordinary window. A hidden window that is not in any group must not be drawn either.",
+  "monitors": [
+    {"id": 0, "name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1200, "scale": 1, "transform": 0, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 3, "name": "3"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": true}
+  ],
+  "workspaces": [
+    {"id": 3, "name": "3", "monitor": "eDP-1", "monitorID": 0, "windows": 5, "hasfullscreen": false, "lastwindow": "0xc1", "lastwindowtitle": ""}
+  ],
+  "clients": [
+    {"address": "0xc1", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "initialClass": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 0, "grouped": ["0xc1", "0xc2", "0xc3"], "pinned": false},
+    {"address": "0xc2", "mapped": true, "hidden": true, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "initialClass": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 2, "grouped": ["0xc1", "0xc2", "0xc3"], "pinned": false},
+    {"address": "0xc3", "mapped": true, "hidden": true, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "initialClass": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 3, "grouped": ["0xc1", "0xc2", "0xc3"], "pinned": false},
+    {"address": "0xc4", "mapped": true, "hidden": true, "at": [967, 42], "size": [941, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "hidden.alone", "initialClass": "hidden.alone", "title": "hidden.alone window", "focusHistoryID": 4, "grouped": [], "pinned": false},
+    {"address": "0xc5", "mapped": true, "hidden": false, "at": [967, 42], "size": [941, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "org.gnome.Nautilus", "initialClass": "org.gnome.Nautilus", "title": "org.gnome.Nautilus window", "focusHistoryID": 1, "grouped": [], "pinned": false}
+  ],
+  "opts": {"activeWorkspaceId": 3, "activeAddress": "0XC1"}
+}

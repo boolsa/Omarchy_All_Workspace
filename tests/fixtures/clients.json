@@ -1,0 +1,431 @@
+[
+  {
+    "address": "0x5cd959cd1920",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      941,
+      1146
+    ],
+    "workspace": {
+      "id": 1,
+      "name": "1"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "org.omarchy.btop",
+    "title": "org.omarchy.btop window",
+    "initialClass": "org.omarchy.btop",
+    "initialTitle": "org.omarchy.btop window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 9,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000006"
+  },
+  {
+    "address": "0x5cd959ebb2d0",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      967,
+      42
+    ],
+    "size": [
+      941,
+      1146
+    ],
+    "workspace": {
+      "id": 4,
+      "name": "4"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "chrome-oboe.com__-Default",
+    "title": "chrome-oboe.com__-Default window",
+    "initialClass": "chrome-oboe.com__-Default",
+    "initialTitle": "chrome-oboe.com__-Default window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 4,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "1800000c"
+  },
+  {
+    "address": "0x5cd959e9fb70",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      622
+    ],
+    "size": [
+      1896,
+      566
+    ],
+    "workspace": {
+      "id": 3,
+      "name": "3"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "org.gnome.Nautilus",
+    "title": "org.gnome.Nautilus window",
+    "initialClass": "org.gnome.Nautilus",
+    "initialTitle": "org.gnome.Nautilus window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 10,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000011"
+  },
+  {
+    "address": "0x5cd959f568c0",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      967,
+      42
+    ],
+    "size": [
+      941,
+      1146
+    ],
+    "workspace": {
+      "id": 1,
+      "name": "1"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "chrome-localhost__-Default",
+    "title": "chrome-localhost__-Default window",
+    "initialClass": "chrome-localhost__-Default",
+    "initialTitle": "chrome-localhost__-Default window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 6,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "1800000f"
+  },
+  {
+    "address": "0x5cd959dac890",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      566
+    ],
+    "workspace": {
+      "id": 3,
+      "name": "3"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "anki",
+    "title": "anki window",
+    "initialClass": "anki",
+    "initialTitle": "anki window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 5,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000009"
+  },
+  {
+    "address": "0x5cd959e604a0",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      941,
+      1146
+    ],
+    "workspace": {
+      "id": 4,
+      "name": "4"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "chrome-x.com__-Default",
+    "title": "chrome-x.com__-Default window",
+    "initialClass": "chrome-x.com__-Default",
+    "initialTitle": "chrome-x.com__-Default window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 8,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "1800000b"
+  },
+  {
+    "address": "0x5cd959ecca00",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      1146
+    ],
+    "workspace": {
+      "id": 6,
+      "name": "6"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "TUI.tile",
+    "title": "TUI.tile window",
+    "initialClass": "TUI.tile",
+    "initialTitle": "TUI.tile window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 1,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000021"
+  },
+  {
+    "address": "0x5cd959d64e40",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      1146
+    ],
+    "workspace": {
+      "id": 5,
+      "name": "5"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "org.telegram.desktop",
+    "title": "org.telegram.desktop window",
+    "initialClass": "org.telegram.desktop",
+    "initialTitle": "org.telegram.desktop window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 3,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000012"
+  },
+  {
+    "address": "0x5cd959eca570",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      1146
+    ],
+    "workspace": {
+      "id": 7,
+      "name": "7"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "chrome-127.0.0.1__-Default",
+    "title": "chrome-127.0.0.1__-Default window",
+    "initialClass": "chrome-127.0.0.1__-Default",
+    "initialTitle": "chrome-127.0.0.1__-Default window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "scrolling",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 7,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000085"
+  },
+  {
+    "address": "0x5cd959ef1810",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      1146
+    ],
+    "workspace": {
+      "id": -98,
+      "name": "special:scratchpad"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "chromium",
+    "title": "chromium window",
+    "initialClass": "chromium",
+    "initialTitle": "chromium window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 2,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "18000068"
+  },
+  {
+    "address": "0x5cd95a067490",
+    "mapped": true,
+    "hidden": false,
+    "visible": true,
+    "acceptsInput": true,
+    "at": [
+      12,
+      42
+    ],
+    "size": [
+      1896,
+      1146
+    ],
+    "workspace": {
+      "id": 2,
+      "name": "2"
+    },
+    "floating": false,
+    "monitor": 0,
+    "class": "com.mitchellh.ghostty",
+    "title": "com.mitchellh.ghostty window",
+    "initialClass": "com.mitchellh.ghostty",
+    "initialTitle": "com.mitchellh.ghostty window",
+    "xwayland": false,
+    "pinned": false,
+    "pinFullscreened": false,
+    "fullscreen": 0,
+    "fullscreenClient": 0,
+    "fullscreenHandler": "default",
+    "allowedOverFullscreen": true,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 0,
+    "inhibitingIdle": false,
+    "contentType": "none",
+    "tearingHint": false,
+    "stableId": "1800003d"
+  }
+]

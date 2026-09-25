@@ -177,6 +177,19 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 5. **Bar and keybinding.** `BarWidget.qml`, the keybinding and the layer rule, then polish: animation and title chip.
 6. **Project docs.** `CLAUDE.md`, `README.md` and `plan.md`. Commit, then pull into the deploy clone.
 
+## Spike results (2026-09-25)
+
+Settled on the live machine with the step-1 spike overlay:
+
+- **(a) Address format.** `HyprlandToplevel.address` has no prefix (`5cd959cd1920`). `lastIpcObject.address` has the prefix (`0x5cd959cd1920`). `lastIpcObject` carries all 32 `hyprctl clients -j` fields once `Hyprland.refreshToplevels()` has run.
+- **(b) Capture.** Every window returned `hasContent=true` with `live: false` and no explicit `captureFrame()`. That includes windows on hidden workspaces 1 and 3–7 and the scratchpad. `sourceSize` equals the window's logical size.
+- **(c) Jump.** `Hyprland.dispatch('hl.dsp.focus({ window = "address:0x…" })')`, sent after `dismiss()` via `Qt.callLater`:
+  - Switches workspace 2 → 6 and focuses the target window.
+  - For a scratchpad window, opens `special:scratchpad` and focuses it.
+  - Focusing a window on a normal workspace again hides the scratchpad, because `binds:hide_special_on_workspace_change` is on.
+  - No `hyprctl` fallback is needed.
+- **(d) Routing.** `omarchy-shell shell toggle boolsa.overview` reaches the overlay. `omarchy-shell shell call boolsa.overview <method> <arg>` reaches overlay methods, which is useful for scripted checks. `omarchy plugin enable boolsa.overview --section left` placed the bar button right after `omarchy.workspaces`.
+
 ## Verification
 
 ```bash

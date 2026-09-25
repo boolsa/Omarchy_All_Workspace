@@ -1,18 +1,63 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import QtQml
 import QtQuick
 import qs.Commons
+import qs.Ui
+import "Model.js" as Model
 
-// SPIKE: flat list of every toplevel with a one-shot snapshot, used to
-// settle the open questions in plan.md step 1 before the real UI lands.
+// Mission Control for Hyprland: every workspace as a miniature of its
+// monitor, every window a clickable snapshot. The shell loads this as an
+// overlay (keepLoaded) and toggles it with
+// `omarchy-shell shell toggle boolsa.overview`. Layout, ordering, navigation
+// and dispatch strings all come from Model.js; this file only wires Hyprland
+// state in and user intent out.
 Item {
   id: root
 
   property var shell: null
   property var manifest: null
+
   property bool opened: false
   property var targetScreen: null
+
+  // Model state. `cards` is Model.buildOverview output, `flat` the reading
+  // order used by keyboard navigation, and `toplevels` maps normalized
+  // addresses to HyprlandToplevel objects for capture and live titles.
+  property var cards: []
+  property var flat: []
+  property var toplevels: ({})
+  property string cardsKey: ""
+  property string selectedAddress: ""
+  property string openedActiveAddress: ""
+  readonly property int selectedIndex: indexOfAddress(selectedAddress)
+
+  // Shares the [menu] surface tokens with the first-party overlays so themes
+  // that style the menu also style the overview.
+  property color scrim: Color.menu.scrim
+  property color surface: Color.menu.background
+  property color foreground: Color.menu.text
+  property color accent: Color.accent
+  readonly property int cornerRadius: Style.cornerRadius
+  property string fontFamily: Style.font.menuFamily
+  readonly property int outerMargin: Style.space(40)
+  readonly property int cardGap: Style.spacing.panelGap * 2
+  readonly property int headerHeight: Style.font.subtitle + Style.spacing.md * 2
+  readonly property real gridAspect: activeAspect()
+  readonly property var grid: Model.gridLayout(cards.length, gridArea.width, gridArea.height, gridAspect, cardGap, headerHeight)
+  readonly property QtObject pointerGate: gate
+
+  // Events that change what the overview shows. screencast/screencastv2 are
+  // deliberately absent: every ScreencopyView capture emits them, and
+  // refreshing on them loops into a refresh storm (end-4 dots #3631).
+  readonly property var refreshEvents: [
+    "openwindow", "closewindow", "movewindow", "movewindowv2",
+    "changefloatingmode", "fullscreen", "createworkspacev2",
+    "destroyworkspacev2", "moveworkspacev2"
+  ]
 
   function screenForFocusedMonitor() {
     var name = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : ""
@@ -25,58 +70,246 @@ Item {
 
   function open(payloadJson) {
     root.targetScreen = root.screenForFocusedMonitor()
-    Hyprland.refreshToplevels()
-    Hyprland.refreshWorkspaces()
+    root.openedActiveAddress = Hyprland.activeToplevel
+      ? Model.normalizeAddress(Hyprland.activeToplevel.address) : ""
+    root.selectedAddress = ""
     Hyprland.refreshMonitors()
+    Hyprland.refreshWorkspaces()
+    Hyprland.refreshToplevels()
+    root.rebuild()
+    gate.reset()
     root.opened = true
-    diagTimer.restart()
+    openAnimation.restart()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
   function close() {
     root.opened = false
+    root.cards = []
+    root.flat = []
+    root.cardsKey = ""
   }
 
   function dismiss() {
-    root.opened = false
+    root.close()
     if (root.shell && typeof root.shell.hide === "function")
       root.shell.hide((root.manifest && root.manifest.id) || "boolsa.overview")
   }
 
-  function jump(address) {
-    var addr = String(address || "").replace(/^0x/i, "")
-    if (!/^[0-9a-fA-F]+$/.test(addr)) return
-    var cmd = Hyprland.usingLua
-      ? "hl.dsp.focus({ window = \"address:0x" + addr.toLowerCase() + "\" })"
-      : "focuswindow address:0x" + addr.toLowerCase()
+  function toggle() {
+    if (root.opened) root.dismiss()
+    else root.open("{}")
+  }
+
+  function ipcObjects(model) {
+    var out = []
+    var values = model ? model.values : []
+    for (var i = 0; i < values.length; i++) {
+      var ipc = values[i] ? values[i].lastIpcObject : null
+      if (ipc) out.push(ipc)
+    }
+    return out
+  }
+
+  function rebuild() {
+    var monitor = Hyprland.focusedMonitor
+    var activeWorkspaceId = monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : -1
+
+    var map = {}
+    var values = Hyprland.toplevels.values
+    for (var i = 0; i < values.length; i++) {
+      var address = Model.normalizeAddress(values[i].address)
+      if (address) map[address] = values[i]
+    }
+
+    var cards = Model.buildOverview(
+      root.ipcObjects(Hyprland.toplevels),
+      root.ipcObjects(Hyprland.workspaces),
+      root.ipcObjects(Hyprland.monitors),
+      { activeWorkspaceId: activeWorkspaceId, activeAddress: root.openedActiveAddress })
+
+    // Refresh replies re-emit lastIpcObject even when nothing moved; keep the
+    // delegates (and their captured frames) unless the model really changed.
+    var key = JSON.stringify(cards)
+    root.toplevels = map
+    if (key !== root.cardsKey) {
+      root.cardsKey = key
+      root.cards = cards
+      root.flat = Model.flattenWindows(cards)
+    }
+
+    if (root.indexOfAddress(root.selectedAddress) < 0) {
+      var start = Model.initialIndex(root.flat, root.openedActiveAddress)
+      root.selectedAddress = start >= 0 ? root.flat[start].address : ""
+    }
+  }
+
+  function activeAspect() {
+    for (var i = 0; i < root.cards.length; i++) {
+      if (root.cards[i].isActive) return root.cards[i].aspect
+    }
+    return root.cards.length > 0 ? root.cards[0].aspect : 1.6
+  }
+
+  function indexOfAddress(address) {
+    if (!address) return -1
+    for (var i = 0; i < root.flat.length; i++) {
+      if (root.flat[i].address === address) return i
+    }
+    return -1
+  }
+
+  // Thumbnail centers in grid coordinates, derived from the model rather than
+  // from delegates so navigation works before anything has painted.
+  function thumbCenters() {
+    var points = []
+    var g = root.grid
+    for (var i = 0; i < root.flat.length; i++) {
+      var entry = root.flat[i]
+      var cell = g.cells[entry.card]
+      var card = root.cards[entry.card]
+      var win = card ? card.windows[entry.win] : null
+      if (!cell || !win) {
+        points.push({ x: 0, y: 0 })
+        continue
+      }
+      points.push({
+        x: cell.x + (win.rect.x + win.rect.w / 2) * g.cardW,
+        y: cell.y + root.headerHeight + (win.rect.y + win.rect.h / 2) * g.boxH
+      })
+    }
+    return points
+  }
+
+  function selectIndex(index) {
+    if (index < 0 || index >= root.flat.length) return
+    root.selectedAddress = root.flat[index].address
+    gate.reset()
+  }
+
+  function selectAddress(address) {
+    root.selectedAddress = address
+  }
+
+  function moveSelection(dir) {
+    root.selectIndex(Model.navigate(root.thumbCenters(), root.selectedIndex, dir))
+  }
+
+  function stepSelection(delta) {
+    root.selectIndex(Model.stepIndex(root.flat.length, root.selectedIndex, delta))
+  }
+
+  // Close first so the layer gives up exclusive keyboard focus, then let
+  // Hyprland switch workspace and focus the target.
+  function run(cmd) {
+    if (!cmd) return
     root.dismiss()
-    Qt.callLater(function() {
-      console.log("[boolsa.overview] dispatch " + cmd)
-      Hyprland.dispatch(cmd)
-    })
+    Qt.callLater(function() { Hyprland.dispatch(cmd) })
+  }
+
+  function jump(address) {
+    root.run(Model.focusWindowCmd(address, Hyprland.usingLua))
+  }
+
+  function activateSelection() {
+    if (root.selectedAddress) root.jump(root.selectedAddress)
+  }
+
+  function activateCard(index) {
+    var cmd = Model.cardActivationCmd(root.cards[index], Hyprland.usingLua)
+    if (cmd) root.run(cmd)
+    else root.dismiss()
+  }
+
+  function activateWorkspace(id) {
+    root.run(Model.focusWorkspaceCmd(id, Hyprland.usingLua))
+  }
+
+  function handleKey(event) {
+    var key = event.key
+    var handled = true
+    if (key === Qt.Key_Escape) root.dismiss()
+    else if (key === Qt.Key_Left || key === Qt.Key_H) root.moveSelection("left")
+    else if (key === Qt.Key_Right || key === Qt.Key_L) root.moveSelection("right")
+    else if (key === Qt.Key_Up || key === Qt.Key_K) root.moveSelection("up")
+    else if (key === Qt.Key_Down || key === Qt.Key_J) root.moveSelection("down")
+    else if (key === Qt.Key_Backtab) root.stepSelection(-1)
+    else if (key === Qt.Key_Tab) root.stepSelection((event.modifiers & Qt.ShiftModifier) ? -1 : 1)
+    else if (key === Qt.Key_Return || key === Qt.Key_Enter || key === Qt.Key_Space) root.activateSelection()
+    else if (key >= Qt.Key_1 && key <= Qt.Key_9) root.activateWorkspace(key - Qt.Key_0)
+    else if (key === Qt.Key_0) root.activateWorkspace(10)
+    else handled = false
+    event.accepted = handled
+  }
+
+  PointerMoveGate {
+    id: gate
+    referenceItem: content
   }
 
   Timer {
-    id: diagTimer
-    interval: 600
+    id: rebuildTimer
+    interval: 60
+    onTriggered: if (root.opened) root.rebuild()
+  }
+
+  Timer {
+    id: refreshTimer
+    interval: 100
     onTriggered: {
-      var values = Hyprland.toplevels.values
-      console.log("[boolsa.overview] usingLua=" + Hyprland.usingLua + " toplevels=" + values.length)
-      for (var i = 0; i < values.length; i++) {
-        var t = values[i]
-        var ipc = t.lastIpcObject || {}
-        console.log("[boolsa.overview] address=" + t.address
-          + " ipcKeys=" + Object.keys(ipc).length
-          + " ipcAddress=" + ipc.address
-          + " ws=" + (t.workspace ? t.workspace.id : "null")
-          + " at=" + JSON.stringify(ipc.at) + " size=" + JSON.stringify(ipc.size)
-          + " wayland=" + (t.wayland ? "yes" : "no"))
-      }
-      for (var j = 0; j < thumbs.count; j++) {
-        var it = thumbs.itemAt(j)
-        if (it) console.log("[boolsa.overview] thumb " + it.addr + " hasContent=" + it.hasContent + " source=" + it.sourceW + "x" + it.sourceH)
-      }
+      Hyprland.refreshWorkspaces()
+      Hyprland.refreshToplevels()
     }
+  }
+
+  Connections {
+    target: Hyprland
+    enabled: root.opened
+    function onRawEvent(event) {
+      var name = event ? event.name : ""
+      if (name === "screencast" || name === "screencastv2") return
+      if (root.refreshEvents.indexOf(name) >= 0) refreshTimer.restart()
+    }
+  }
+
+  // lastIpcObject only changes when a refresh reply lands, so rebuild when
+  // any of them does (debounced), and when toplevels come or go.
+  Instantiator {
+    active: root.opened
+    model: Hyprland.toplevels
+    onObjectAdded: rebuildTimer.restart()
+    onObjectRemoved: rebuildTimer.restart()
+    delegate: Connections {
+      required property var modelData
+      target: modelData
+      function onLastIpcObjectChanged() { rebuildTimer.restart() }
+    }
+  }
+
+  Instantiator {
+    active: root.opened
+    model: Hyprland.workspaces
+    delegate: Connections {
+      required property var modelData
+      target: modelData
+      function onLastIpcObjectChanged() { rebuildTimer.restart() }
+    }
+  }
+
+  Instantiator {
+    active: root.opened
+    model: Hyprland.monitors
+    delegate: Connections {
+      required property var modelData
+      target: modelData
+      function onLastIpcObjectChanged() { rebuildTimer.restart() }
+    }
+  }
+
+  ParallelAnimation {
+    id: openAnimation
+    NumberAnimation { target: content; property: "opacity"; from: 0; to: 1; duration: 140; easing.type: Easing.OutCubic }
+    NumberAnimation { target: content; property: "scale"; from: 0.97; to: 1; duration: 140; easing.type: Easing.OutCubic }
   }
 
   PanelWindow {
@@ -92,7 +325,7 @@ Item {
 
     Rectangle {
       anchors.fill: parent
-      color: Color.menu.scrim
+      color: root.scrim
     }
 
     MouseArea {
@@ -101,68 +334,47 @@ Item {
     }
 
     Item {
-      id: keyCatcher
+      id: content
       anchors.fill: parent
-      focus: true
-      Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape) {
-          root.dismiss()
-          event.accepted = true
-        }
-      }
+      anchors.margins: root.outerMargin
 
-      Flow {
+      Item {
+        id: keyCatcher
         anchors.fill: parent
-        anchors.margins: Style.spacing.panelPadding
-        spacing: Style.spacing.lg
+        focus: true
 
-        Repeater {
-          id: thumbs
-          model: root.opened ? Hyprland.toplevels.values : []
+        Keys.priority: Keys.BeforeItem
+        Keys.onPressed: function(event) { root.handleKey(event) }
 
-          Rectangle {
-            id: tile
-            required property var modelData
-            readonly property string addr: modelData.address
-            readonly property bool hasContent: view.hasContent
-            readonly property int sourceW: view.sourceSize.width
-            readonly property int sourceH: view.sourceSize.height
+        Item {
+          id: gridArea
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: parent.top
+          anchors.bottom: hint.top
+          anchors.bottomMargin: Style.spacing.xxl
 
-            width: 320
-            height: 220
-            color: Color.menu.background
-            border.color: Color.menu.border
-            border.width: 1
+          Repeater {
+            model: root.cards
 
-            ScreencopyView {
-              id: view
-              anchors.fill: parent
-              anchors.margins: 4
-              anchors.bottomMargin: 40
-              captureSource: root.opened && tile.modelData ? tile.modelData.wayland : null
-              live: false
-            }
-
-            Text {
-              anchors.left: parent.left
-              anchors.right: parent.right
-              anchors.bottom: parent.bottom
-              anchors.margins: 4
-              color: Color.menu.text
-              font.pixelSize: Style.font.caption
-              elide: Text.ElideRight
-              wrapMode: Text.NoWrap
-              maximumLineCount: 2
-              text: "ws " + (tile.modelData.workspace ? tile.modelData.workspace.id : "?")
-                + " | " + tile.addr + " | content " + view.hasContent
-                + "\n" + tile.modelData.title
-            }
-
-            MouseArea {
-              anchors.fill: parent
-              onClicked: root.jump(tile.addr)
+            WorkspaceCard {
+              overview: root
+              x: root.grid.cells[index] ? root.grid.cells[index].x : 0
+              y: root.grid.cells[index] ? root.grid.cells[index].y : 0
+              width: root.grid.cardW
+              height: root.grid.cardH
             }
           }
+        }
+
+        Text {
+          id: hint
+          anchors.bottom: parent.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          text: "←↑↓→ / hjkl move · Tab cycle · Enter open · 1–9 workspace · Esc close"
+          color: Util.alpha(root.foreground, 0.6)
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
         }
       }
     }

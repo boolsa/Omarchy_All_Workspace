@@ -1,0 +1,18 @@
+{
+  "description": "Two monitors. eDP-1 at 0,0 is 1920x1200 scale 1. DP-1 at x=1920 is 2880x1920 physical, scale 1.5, transform 1 (rotated 90 degrees), so its logical size is 1280x1920 after the swap; both reserve a 30px top bar. Workspace 7 is missing from the workspace list, so its card takes the monitor of its first window.",
+  "monitors": [
+    {"id": 0, "name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1200, "scale": 1, "transform": 0, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 1, "name": "1"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": false},
+    {"id": 1, "name": "DP-1", "x": 1920, "y": 0, "width": 2880, "height": 1920, "scale": 1.5, "transform": 1, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 6, "name": "6"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": true}
+  ],
+  "workspaces": [
+    {"id": 1, "name": "1", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0xd1", "lastwindowtitle": ""},
+    {"id": 6, "name": "6", "monitor": "DP-1", "monitorID": 1, "windows": 2, "hasfullscreen": false, "lastwindow": "0xd3", "lastwindowtitle": ""}
+  ],
+  "clients": [
+    {"address": "0xd1", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 2, "grouped": [], "pinned": false},
+    {"address": "0xd2", "mapped": true, "hidden": false, "at": [1930, 40], "size": [1260, 900], "workspace": {"id": 6, "name": "6"}, "floating": false, "fullscreen": 0, "monitor": 1, "class": "chromium", "title": "chromium window", "focusHistoryID": 1, "grouped": [], "pinned": false},
+    {"address": "0xd3", "mapped": true, "hidden": false, "at": [1930, 950], "size": [1260, 970], "workspace": {"id": 6, "name": "6"}, "floating": false, "fullscreen": 0, "monitor": 1, "class": "org.gnome.Nautilus", "title": "org.gnome.Nautilus window", "focusHistoryID": 0, "grouped": [], "pinned": false},
+    {"address": "0xd4", "mapped": true, "hidden": false, "at": [2000, 500], "size": [640, 480], "workspace": {"id": 7, "name": "7"}, "floating": true, "fullscreen": 0, "monitor": 1, "class": "pavucontrol", "title": "pavucontrol window", "focusHistoryID": 3, "grouped": [], "pinned": false}
+  ],
+  "opts": {"activeWorkspaceId": 6, "activeAddress": "d3"}
+}

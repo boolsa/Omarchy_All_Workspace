@@ -1,0 +1,26 @@
+{
+  "description": "Garbage and partial input that must be skipped without throwing: an empty lastIpcObject, a null entry, a client with no workspace, an unmapped client, workspace id -1, a string workspace id, a non-hex address, an injection attempt in the address, and a duplicate of a valid address. One partial-but-drawable client (address and workspace only) and one full client survive. The monitor has no scale, position or reserved array.",
+  "monitors": [
+    {},
+    {"id": 0, "name": "eDP-1", "width": 1920, "height": 1200}
+  ],
+  "workspaces": [
+    {},
+    null,
+    {"id": 1, "name": "1", "monitor": "eDP-1", "monitorID": 0, "windows": 2}
+  ],
+  "clients": [
+    {},
+    null,
+    {"address": "0xe0"},
+    {"address": "0xe1", "mapped": false, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 1, "name": "1"}, "monitor": 0, "class": "unmapped", "focusHistoryID": 3},
+    {"address": "0xe2", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": -1, "name": ""}, "monitor": 0, "class": "invalid.workspace", "focusHistoryID": 4},
+    {"address": "0xe3", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": "1", "name": "1"}, "monitor": 0, "class": "string.workspace", "focusHistoryID": 5},
+    {"address": "not-an-address", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 1, "name": "1"}, "monitor": 0, "class": "bad.address", "focusHistoryID": 6},
+    {"address": "0x12\" }) hl.dsp.exec_cmd(\"rm", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 1, "name": "1"}, "monitor": 0, "class": "injection", "focusHistoryID": 7},
+    {"address": "e4", "workspace": {"id": 1}},
+    {"address": "0xe5", "mapped": true, "hidden": false, "at": [960, 0], "size": [960, 1200], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "valid", "title": "valid window", "focusHistoryID": 0, "grouped": [], "pinned": false},
+    {"address": "0XE5", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 2, "name": "2"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "duplicate", "title": "duplicate window", "focusHistoryID": 1, "grouped": [], "pinned": false}
+  ],
+  "opts": {}
+}

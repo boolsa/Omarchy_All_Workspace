@@ -1,0 +1,21 @@
+{
+  "description": "One 1920x1200 monitor with a 30px bar. Workspace 1: two tiled windows and a floating window overlapping both (least recently focused, still drawn on top). Workspace 2: a maximized (fullscreen 1) tiled window, a tiled window, a floating window, and two fullscreen windows (2 and 3) that must end up on top.",
+  "monitors": [
+    {"id": 0, "name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1200, "scale": 1, "transform": 0, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 2, "name": "2"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": true}
+  ],
+  "workspaces": [
+    {"id": 1, "name": "1", "monitor": "eDP-1", "monitorID": 0, "windows": 3, "hasfullscreen": false, "lastwindow": "0xa2", "lastwindowtitle": ""},
+    {"id": 2, "name": "2", "monitor": "eDP-1", "monitorID": 0, "windows": 5, "hasfullscreen": true, "lastwindow": "0xb2", "lastwindowtitle": ""}
+  ],
+  "clients": [
+    {"address": "0xa3", "mapped": true, "hidden": false, "at": [500, 300], "size": [800, 600], "workspace": {"id": 1, "name": "1"}, "floating": true, "fullscreen": 0, "monitor": 0, "class": "floating.dialog", "initialClass": "floating.dialog", "title": "floating.dialog window", "focusHistoryID": 6, "grouped": [], "pinned": false},
+    {"address": "0xa1", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "tiled.left", "initialClass": "tiled.left", "title": "tiled.left window", "focusHistoryID": 4, "grouped": [], "pinned": false},
+    {"address": "0xa2", "mapped": true, "hidden": false, "at": [967, 42], "size": [941, 1146], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "tiled.right", "initialClass": "tiled.right", "title": "tiled.right window", "focusHistoryID": 2, "grouped": [], "pinned": false},
+    {"address": "0xb4", "mapped": true, "hidden": false, "at": [0, 0], "size": [1920, 1200], "workspace": {"id": 2, "name": "2"}, "floating": false, "fullscreen": 2, "monitor": 0, "class": "video.player", "initialClass": "video.player", "title": "video.player window", "focusHistoryID": 3, "grouped": [], "pinned": false},
+    {"address": "0xb3", "mapped": true, "hidden": false, "at": [600, 400], "size": [640, 480], "workspace": {"id": 2, "name": "2"}, "floating": true, "fullscreen": 0, "monitor": 0, "class": "calculator", "initialClass": "calculator", "title": "calculator window", "focusHistoryID": 1, "grouped": [], "pinned": true},
+    {"address": "0xb5", "mapped": true, "hidden": false, "at": [0, 0], "size": [1920, 1200], "workspace": {"id": 2, "name": "2"}, "floating": true, "fullscreen": 3, "monitor": 0, "class": "game", "initialClass": "game", "title": "game window", "focusHistoryID": 7, "grouped": [], "pinned": false},
+    {"address": "0xb1", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 2, "name": "2"}, "floating": false, "fullscreen": 1, "monitor": 0, "class": "maximized.editor", "initialClass": "maximized.editor", "title": "maximized.editor window", "focusHistoryID": 5, "grouped": [], "pinned": false},
+    {"address": "0xb2", "mapped": true, "hidden": false, "at": [12, 42], "size": [941, 1146], "workspace": {"id": 2, "name": "2"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "terminal", "initialClass": "terminal", "title": "terminal window", "focusHistoryID": 0, "grouped": [], "pinned": false}
+  ],
+  "opts": {"activeWorkspaceId": 2, "activeAddress": "b2"}
+}

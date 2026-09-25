@@ -1,0 +1,27 @@
+{
+  "description": "Numbered, named and special workspaces mixed. The named workspace 'web' has a negative id but is not special. Workspace 5 only appears through its client (not in the workspace list). The empty named workspace 'idle' must not get a card.",
+  "monitors": [
+    {"id": 0, "name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1200, "scale": 1, "transform": 0, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 3, "name": "3"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": true}
+  ],
+  "workspaces": [
+    {"id": -98, "name": "special:scratchpad", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x107", "lastwindowtitle": ""},
+    {"id": 10, "name": "10", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x103", "lastwindowtitle": ""},
+    {"id": -1337, "name": "web", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x105", "lastwindowtitle": ""},
+    {"id": 3, "name": "3", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x102", "lastwindowtitle": ""},
+    {"id": -97, "name": "special:magic", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x106", "lastwindowtitle": ""},
+    {"id": 12, "name": "chat", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x104", "lastwindowtitle": ""},
+    {"id": 1, "name": "1", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0x101", "lastwindowtitle": ""},
+    {"id": -1400, "name": "idle", "monitor": "eDP-1", "monitorID": 0, "windows": 0, "hasfullscreen": false, "lastwindow": "0x0", "lastwindowtitle": ""}
+  ],
+  "clients": [
+    {"address": "0x107", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": -98, "name": "special:scratchpad"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "chromium", "title": "chromium window", "focusHistoryID": 6, "grouped": [], "pinned": false},
+    {"address": "0x105", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": -1337, "name": "web"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "firefox", "title": "firefox window", "focusHistoryID": 4, "grouped": [], "pinned": false},
+    {"address": "0x103", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 10, "name": "10"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "anki", "title": "anki window", "focusHistoryID": 2, "grouped": [], "pinned": false},
+    {"address": "0x106", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": -97, "name": "special:magic"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "spotify", "title": "spotify window", "focusHistoryID": 5, "grouped": [], "pinned": false},
+    {"address": "0x101", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 1, "grouped": [], "pinned": false},
+    {"address": "0x108", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 5, "name": "5"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "org.telegram.desktop", "title": "org.telegram.desktop window", "focusHistoryID": 7, "grouped": [], "pinned": false},
+    {"address": "0x104", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 12, "name": "chat"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "signal", "title": "signal window", "focusHistoryID": 3, "grouped": [], "pinned": false},
+    {"address": "0x102", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 3, "name": "3"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "org.gnome.Nautilus", "title": "org.gnome.Nautilus window", "focusHistoryID": 0, "grouped": [], "pinned": false}
+  ],
+  "opts": {"activeWorkspaceId": 3, "activeAddress": "0x102"}
+}

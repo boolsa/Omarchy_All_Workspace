@@ -1,0 +1,18 @@
+{
+  "description": "The active workspace 4 has no windows but exists in the workspace list; it still gets a card with no windows. Workspaces 1 and 2 are occupied and the scratchpad holds one window.",
+  "monitors": [
+    {"id": 0, "name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1200, "scale": 1, "transform": 0, "reserved": [0, 30, 0, 0], "activeWorkspace": {"id": 4, "name": "4"}, "specialWorkspace": {"id": 0, "name": ""}, "focused": true}
+  ],
+  "workspaces": [
+    {"id": 2, "name": "2", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0xf2", "lastwindowtitle": ""},
+    {"id": 1, "name": "1", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0xf1", "lastwindowtitle": ""},
+    {"id": -98, "name": "special:scratchpad", "monitor": "eDP-1", "monitorID": 0, "windows": 1, "hasfullscreen": false, "lastwindow": "0xf9", "lastwindowtitle": ""},
+    {"id": 4, "name": "4", "monitor": "eDP-1", "monitorID": 0, "windows": 0, "hasfullscreen": false, "lastwindow": "0x0", "lastwindowtitle": ""}
+  ],
+  "clients": [
+    {"address": "0xf9", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": -98, "name": "special:scratchpad"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "chromium", "initialClass": "chromium", "title": "chromium window", "focusHistoryID": 2, "grouped": [], "pinned": false},
+    {"address": "0xf2", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 2, "name": "2"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "org.telegram.desktop", "initialClass": "org.telegram.desktop", "title": "org.telegram.desktop window", "focusHistoryID": 0, "grouped": [], "pinned": false},
+    {"address": "0xf1", "mapped": true, "hidden": false, "at": [12, 42], "size": [1896, 1146], "workspace": {"id": 1, "name": "1"}, "floating": false, "fullscreen": 0, "monitor": 0, "class": "com.mitchellh.ghostty", "initialClass": "com.mitchellh.ghostty", "title": "com.mitchellh.ghostty window", "focusHistoryID": 1, "grouped": [], "pinned": false}
+  ],
+  "opts": {"activeWorkspaceId": 4, "activeAddress": ""}
+}

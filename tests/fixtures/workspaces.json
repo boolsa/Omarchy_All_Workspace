@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "name": "1",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 2,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959f568c0",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 2,
+    "name": "2",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 1,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd95a067490",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 3,
+    "name": "3",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 2,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959dac890",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 4,
+    "name": "4",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 2,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959ebb2d0",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": -98,
+    "name": "special:scratchpad",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 1,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959ef1810",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 5,
+    "name": "5",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 1,
+    "hasfullscreen": false,
+    "lastwindow": "0x0",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 6,
+    "name": "6",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 1,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959ecca00",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "dwindle"
+  },
+  {
+    "id": 7,
+    "name": "7",
+    "monitor": "eDP-1",
+    "monitorID": 0,
+    "windows": 1,
+    "hasfullscreen": false,
+    "lastwindow": "0x5cd959eca570",
+    "lastwindowtitle": "",
+    "ispersistent": false,
+    "tiledLayout": "scrolling"
+  }
+]
