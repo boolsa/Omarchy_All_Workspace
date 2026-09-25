@@ -73,3 +73,11 @@ hyprctl activewindow -j | jq -r '.address, .workspace.id'
 ## Commits
 
 Use imperative, unprefixed, outcome-oriented subjects: `Jump to scratchpad windows`, not `feat(model): scratchpad`.
+The remote is the private repo `github.com/boolsa/Omarchy_All_Workspace` (`origin`, branch `master`).
+
+## Testing input without a keyboard
+
+- `wtype` sends keys through a virtual keyboard with its own keymap.
+  - Keys delivered to the open overlay arrive correctly (arrows, Enter, digits, Esc all verified).
+  - Hyprland resolves **binds** against the physical keymap, so `wtype -M logo -k grave` fired SUPER+Escape (the system menu) instead of this plugin's bind. Test the binding by hand.
+- Only send keys after confirming the overlay has focus: `hyprctl layers -j | grep -q '"boolsa-overview"'`. Otherwise the keys go to whatever terminal is focused.
