@@ -39,14 +39,14 @@ Compared with a compiled plugin:
 - **Keyboard:**
   - Arrows or `h j k l` move the highlight to the nearest window in that direction, across cards.
   - `Tab` / `Shift+Tab` step through windows in reading order.
-  - `Enter` jumps to the highlighted window.
-  - `1`–`9` switch straight to that workspace.
+  - `Enter` or `Space` jumps to the highlighted window.
+  - `1`–`9` switch straight to that workspace, and `0` to workspace 10.
   - `Esc` closes.
   - The highlight starts on the active window.
 - **Thumbnails:** snapshots.
-  - Every window is captured once when the overlay opens. The highlighted window refreshes about every 500 ms.
+  - Every window is captured once when the overlay opens. The highlighted window refreshes every 500 ms.
   - Windows on hidden workspaces show **the last frame the app drew** before it was hidden. Hyprland marks hidden windows as suspended, so most apps stop drawing; they can't be live.
-  - Until a snapshot arrives, and for windows that block capture, the tile shows the app icon and title instead.
+  - Until a snapshot arrives, and for windows that block capture, the tile shows the app icon and class name instead.
 - **Groups (tabs):** only the visible tab of a group is drawn, with a `+N` badge.
 - **Floating and fullscreen windows:** drawn above tiled ones, in focus-history order.
 
@@ -69,11 +69,12 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
                      a left click toggles the overlay
   Model.js           all pure logic (.pragma library, ES5 only); tested under node
   tests/             load.mjs, model.test.mjs, source.test.mjs, repo.test.mjs,
-                     fixtures/ (hyprctl -j output with titles scrubbed)
+                     fixtures/ (hyprctl -j output with titles scrubbed, plus synthetic-*.json
+                     scenarios: stacking, group, empty-active, named, multimonitor, invalid)
   scripts/capture-fixtures.sh   dumps clients/workspaces/monitors -j and scrubs titles
   CLAUDE.md          working agreement (hard rules plus how to verify), modeled on 004's
   plan.md            this design
-  README.md, .gitignore
+  README.md, LICENSE (MIT), .gitignore
 ```
 
 **Deploying it:**
@@ -81,9 +82,10 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   That clones the repo, validates the manifest, and installs it as
   `~/.config/omarchy/plugins/boolsa.overview` (the folder name comes from the
   manifest `id`, not the repo name). Updates go through
-  `omarchy plugin update boolsa.overview`.
+  `omarchy plugin update boolsa.overview`, followed by `omarchy restart shell`.
+  The update only runs `rescanPlugins`, which doesn't swap overlay code (see *Spike results (e)*).
 - Local dev alternative: `git clone <repo-url> ~/.config/omarchy/plugins/boolsa.overview`.
-  To update that clone, commit, then `git -C ~/.config/omarchy/plugins/boolsa.overview pull`.
+  To update that clone, commit, then `git -C ~/.config/omarchy/plugins/boolsa.overview pull` and `omarchy restart shell`.
 - **Don't use a symlink.** The shell's inotify watcher doesn't follow symlinked plugin folders, so saves wouldn't hot-reload, and `omarchy-plugin-validate` rejects symlinks.
 
 ## How it works
@@ -100,8 +102,11 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 ### Window data (no hyprctl processes)
 - **On `open()`:** call `Hyprland.refreshToplevels()`, `refreshWorkspaces()` and `refreshMonitors()`.
 - **Building the model:** gather `Hyprland.toplevels.values` into plain objects `{ address, lastIpcObject }`, plus the workspace and monitor `lastIpcObject`s. The fields have the same shape as `hyprctl clients -j`, so the node tests can use hyprctl fixtures.
-- **Rebuilding while open:** a 100 ms debounce `Timer` rebuilds the model when a `lastIpcObject` changes, and on `Hyprland.rawEvent` names `openwindow`, `closewindow`, `movewindowv2`, `changefloatingmode` and `fullscreen`.
+- **Rebuilding while open:**
+  - `Instantiator`s watch every toplevel's, workspace's and monitor's `lastIpcObject`. A change, or a toplevel appearing or disappearing, triggers a 60 ms debounced rebuild.
+  - These `Hyprland.rawEvent` names trigger a 100 ms debounced `refreshWorkspaces()` + `refreshToplevels()`: `openwindow`, `closewindow`, `movewindow`, `movewindowv2`, `changefloatingmode`, `fullscreen`, `createworkspacev2`, `destroyworkspacev2`, `moveworkspacev2`.
   - Ignore `screencast` and `screencastv2`. Every capture fires these, and reacting to them causes the refresh storm seen in end-4 issue #3631.
+  - Refresh replies re-emit `lastIpcObject` even when nothing changed. A rebuild whose `JSON.stringify(cards)` equals the previous one keeps the existing delegates and their captured frames.
 - **Why not hyprctl:** DankMaterialShell's overview takes the same approach. Omarchy's own `Workspaces.qml` reads `Hyprland.workspaces` the same way.
 
 ### `Model.js` (pure and tested; `var` and `function` only, same rules as 004's `Model.js`)
@@ -112,59 +117,66 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   - Returns the logical `{x, y, w, h}`: pixel size ÷ `scale`, width and height swapped for transforms 1, 3, 5 and 7, minus `reserved [l, t, r, b]`.
   - The bar's 30 px is removed this way, so tiles fill the card.
 - `relativeRect(client, area)` → the window's `at` and `size` as fractions 0..1 of its monitor's work area, clamped.
-- `buildOverview(clients, workspaces, monitors, activeWsId, activeAddr)` → an ordered array of cards. Each card is `{ id, name, label, special, isActive, aspect, windows: [...] }`.
+- `buildOverview(clients, workspaces, monitors, { activeWorkspaceId, activeAddress })` → an ordered array of cards. Each card is `{ id, name, label, special, isActive, monitorId, area, aspect, windows: [...] }`.
   - **Windows included:** `mapped` windows whose workspace id is not -1. `hidden` ones are counted as group members and not drawn.
   - **Which cards:** occupied workspaces, plus the active one, plus occupied specials last.
   - **Card order:** numbered workspaces ascending, then named workspaces, then specials, labelled without the `special:` prefix.
   - **Z-order within a card:** tiled, then floating, then fullscreen. Within each, windows with a lower `focusHistoryID` (more recently focused) go on top.
-- `gridLayout(n, availW, availH, aspect, gap, headerH)` → `{ cols, rows, cardW, cardH }`, with the column count chosen to make cards as large as possible and the last row centered. For example, 8 cards on 1920x1200 gives 3×3.
-- `navigate(items, fromIndex, dir)` → the nearest item whose center lies in direction `dir`. Distance along the axis counts, with extra weight on sideways offset. `readingOrder(items)` is used for Tab.
+- `gridLayout(n, availW, availH, aspect, gap, headerH)` → `{ cols, rows, cardW, boxH, cardH, cells }`, with the column count chosen to make cards as large as possible and the last row centered. For example, 8 cards on 1920x1200 gives 3×3.
+- `flattenWindows(cards)` → `[{ card, win, address }]` in reading order (top to bottom, then left to right, per card). Keyboard navigation and Tab work on this list.
+- `navigate(points, fromIndex, dir)` → the nearest point whose center lies in direction `dir`. Score is distance along the axis plus twice the sideways offset. `stepIndex(count, from, delta)` wraps for Tab.
+- `resolveActiveAddress(clients, preferred)` → `preferred` (normally `Hyprland.activeToplevel`) if it is drawn, else `mostRecentAddress(clients)`, the lowest `focusHistoryID`. `initialIndex(flat, address)` turns that into the starting highlight.
 - `focusWindowCmd(addr, usingLua)`:
   - Lua config: `hl.dsp.focus({ window = "address:0x…" })`.
   - Legacy config: `focuswindow address:0x…`.
 - `focusWorkspaceCmd(id, usingLua)`:
   - Lua config: `hl.dsp.focus({ workspace = "N" })`, the form Omarchy's `Workspaces.qml:35` uses.
   - Legacy config: `workspace N`.
+- `cardActivationCmd(card, usingLua)` handles a click on a card's empty space.
+  - Numbered workspaces use `focusWorkspaceCmd`.
+  - Special and named workspaces use `focusWindowCmd` on `mostRecentWindow(card)`. Focusing a scratchpad window is what opens the scratchpad.
 
 ### Thumbnails (`WindowThumb.qml`)
 - **The capture view:** `Loader { active: overview.opened }` wraps `ScreencopyView { captureSource: toplevel ? toplevel.wayland : null; live: false }`.
-  - Call `captureFrame()` once it's ready.
-  - The overview's 500 ms `Timer` calls `captureFrame()` on the highlighted thumb only.
+  - It captures one frame as soon as the source is set, so no explicit `captureFrame()` is needed (spike (b)).
+  - Each thumb has a 500 ms `Timer` that only runs while it is the highlighted one, and it calls `captureFrame()`.
 - **Finding the toplevel:** look it up by normalized address in `Hyprland.toplevels.values`.
-- **Fallback while `!hasContent`:** the icon from `Quickshell.iconPath(DesktopEntries.heuristicLookup(class)?.icon ?? class, "application-x-executable")` plus the title.
+- **Fallback while `!hasContent`:** the icon from `DesktopEntries.heuristicLookup(class)` resolved with `Quickshell.iconPath(name, true)`, falling back to `application-x-executable`, plus the class name.
 - **Performance:** no `live: true` captures. Research found that live mode makes the compositor redraw every window at full size every frame, and `constraintSize` doesn't make the capture smaller.
 
 ### Jumping to a window or workspace
 1. `dismiss()` closes the overlay, which gives up exclusive keyboard focus (`misc:layers_hog_keyboard_focus` is `true`).
 2. `Qt.callLater` → `Hyprland.dispatch(Model.focusWindowCmd(addr, Hyprland.usingLua))`.
-   - end-4 and DankMaterialShell use `Hyprland.dispatch` with the Lua string.
-   - Fallback if needed: `Quickshell.execDetached(["hyprctl", "dispatch", cmd])`, the proven Omarchy pattern from `omarchy-launch-or-focus`.
+   - end-4 and DankMaterialShell use `Hyprland.dispatch` with the Lua string, and spike (c) confirmed it here. No `hyprctl` fallback is needed.
 3. Legacy `hyprctl dispatch focuswindow …` fails on Hyprland 0.55+ in Lua mode, so we always check `Hyprland.usingLua`.
 
 ### Look and feel
 - **Tokens:** `import qs.Commons` / `qs.Ui`, same as Emojis.
-  - Colors: `Color.menu.{background, text, border, scrim, selectedBorder}` and `Color.accent`.
-  - Shapes: `Border.surfaceSpec("menu", …)` and `Style.cornerRadius`.
+  - Colors: `Color.menu.background` (surfaces), `Color.menu.text` (text, and borders through `Util.alpha`), and `Color.accent` (the highlight, and the current card's header and border).
+  - The scrim is `Color.menu.scrim` dimmed to at least 85%. The menu's own 50% let desktop text bleed through the grid.
+  - Shapes: `Style.cornerRadius`.
   - Sizes and type: `Style.spacing.*`, `Style.space()`, `Style.font.*`.
   - No hex literals anywhere.
 - **Hover:** use `PointerMoveGate` (`/usr/share/omarchy/shell/Ui/PointerMoveGate.qml`) so the window under a still pointer doesn't grab the highlight when the overlay opens.
 - **Keys:** handled by a `keyCatcher` Item with `Keys.priority: Keys.BeforeItem`, as in Emojis.
-- **Animation:** a 150 ms opacity and scale fade in QML.
+- **Animation:** a 140 ms opacity fade and 0.97 → 1 scale in QML, easing `OutCubic`.
   - Turn off the compositor's layer animation, as Omarchy does for its own overlays.
   - Add `hl.layer_rule({ match = { namespace = "boolsa-overview" }, no_anim = true, animation = "none" })` to `~/.config/hypr/looknfeel.lua`.
 
 ### Bar button (`BarWidget.qml`)
 - A copy of the menu widget pattern (`/usr/share/omarchy/shell/plugins/menu/BarWidget.qml`): a `WidgetButton` whose left click runs `root.bar.run("omarchy-shell shell toggle boolsa.overview")`, with tooltip "All windows".
-- Enabling it: `omarchy plugin enable boolsa.overview` puts it in the left section, then `omarchy bar move` places it right after `omarchy.workspaces`.
+- Enabling it: `omarchy plugin add … --enable` or `omarchy plugin enable boolsa.overview --section left` puts it in the left section, right after `omarchy.workspaces` on a stock bar. `omarchy bar move` moves it elsewhere.
 
 ### Hyprland config (user files only; never edit `/usr/share/omarchy/`)
 - `~/.config/hypr/bindings.lua`: `o.bind("SUPER + grave", "Window overview", "omarchy-shell shell toggle boolsa.overview")`.
   - The key is unbound, so no `hl.unbind` is needed.
-  - With your `altwin:swap_alt_win`, SUPER is the key in the physical Alt position.
+  - On layouts with `altwin:swap_alt_win`, SUPER is the key in the physical Alt position.
 - `~/.config/hypr/looknfeel.lua`: the `no_anim` layer rule above.
 - After each edit, run `hyprctl reload`, then `hyprctl configerrors`, which must print nothing.
 
 ## Build order
+
+All steps were done on 2026-09-25. The spike results below changed two decisions: `keepLoaded` was dropped, and the starting highlight is re-derived.
 
 0. **Save the plan.** You asked for this. Save this plan as `plan.md` in the repo root as the first action after approval, then `git init`.
 1. **Scaffold and spike.**
@@ -213,9 +225,11 @@ Settled on the live machine with the step-1 spike overlay:
 cd <repo-checkout>
 node --test                                             # Model.js: layout math, filtering, ordering, nav, cmd builders, address validation
 /usr/lib/qt6/bin/qmllint *.qml                          # exit code is the gate; qs.* import warnings are expected
-omarchy plugin validate ~/Projects/009_Omarchy_All_Windows
+omarchy plugin validate .
 hyprctl reload && hyprctl configerrors                  # after bindings.lua / looknfeel.lua edits; must be empty
+omarchy restart shell                                   # after pulling overlay changes (no hot reload, spike (e))
 omarchy-shell shell toggle boolsa.overview              # open/close from CLI
+omarchy-shell shell call boolsa.overview jump <address> # scripted jump; `call` returns the method's result
 journalctl --user -o cat _COMM=quickshell -n 50 --no-pager   # no QML errors/warnings from boolsa.overview
 hyprctl activewindow -j | jq -r '.address, .workspace.id'    # confirm the jump landed on the clicked window
 ```
@@ -233,9 +247,41 @@ hyprctl activewindow -j | jq -r '.address, .workspace.id'    # confirm the jump 
    - After closing, quickshell's CPU use is back to idle, so no captures are left running.
    - Opening feels instant on the Iris Xe.
 
+**Status (2026-09-25).**
+
+Verified live:
+- (1) The grid, checked by screenshot.
+- (2) and (3) Jumping, including the scratchpad, driven through `call … jump` and Enter.
+- (4) Esc closes without changing anything.
+- (5) Arrows, Enter and `4`, sent with `wtype` to the focused overlay.
+- (8) Resources: 15 cycles in 2 s, a clean journal, and 0% CPU once closed. The layer appears about 20 ms after the toggle.
+
+Not yet tried:
+- Mouse clicks on windows and on empty card space.
+- Tab.
+- The physical SUPER+` press and the bar button.
+- The edge cases in (7).
+
+`wtype` can't test the binding; see `CLAUDE.md`.
+
 ## Known limitations and risks
+
+`README.md` lists the user-facing subset of these.
+
 - **Old snapshots:** windows on other workspaces show their last drawn frame, not live content. This is a Hyprland suspension limit, and macOS behaves much the same.
 - **Privacy:** the overview puts other workspaces' content on screen, which matters during screen sharing. A hide-previews toggle could come later.
-- **Unconfirmed dispatch syntax:** `Hyprland.dispatch` with a Lua string and `hl.dsp.window.move({ window = … })` aren't tested locally yet. Step 1 checks the first; the second is only needed if drag-to-move comes later.
-- **Lost bar button disables the overlay:** if the bar widget is removed from the bar, the overlay plugin counts as disabled. If that happens, add `{ "id": "boolsa.overview" }` to `plugins[]` in `shell.json`.
+- **Mixed-monitor aspect:** every card is sized from the active workspace's monitor aspect.
+  - With mixed monitors (e.g. landscape and portrait), other monitors' cards keep correct relative window positions but are stretched.
+  - Single-monitor setups are exact.
+- **Scrolling layout:** columns scrolled off-screen have an `at` outside the monitor.
+  - `relativeRect` clamps them to a thin, still clickable sliver at the card's edge.
+  - Hyprland won't capture them either, so they show the icon fallback.
+- **No hot reload for the overlay:** code changes take effect after `omarchy restart shell`. This includes `omarchy plugin update`, which only runs `rescanPlugins` (spike (e)).
+- **Lost bar button disables the overlay:** for a third-party plugin, `PluginRegistry.isEnabled` only checks `bar.layout.*` and `plugins[]`.
+  - If the bar icon is removed, the overlay, and with it the keybinding, stops working.
+  - Fix it by adding `{ "id": "boolsa.overview" }` to `plugins[]` in `~/.config/omarchy/shell.json`.
+- **Dispatch coverage:**
+  - The Lua focus dispatch is confirmed live (spike (c)).
+  - Legacy (non-Lua) dispatch strings are unit-tested but not tried live.
+  - `hl.dsp.window.move({ window = … })` is untested; it's only needed for drag-to-move.
 - **Later ideas:** dragging windows between workspaces, type-to-filter, middle-click to close, a 4-finger swipe gesture, and multi-monitor polish (showing every monitor's overlay).
