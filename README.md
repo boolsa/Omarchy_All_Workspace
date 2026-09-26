@@ -20,6 +20,10 @@ This one makes every window a target.
 | `Enter` / `Space` | jump to the highlighted window |
 | `1`–`9`, `0` | switch straight to workspace 1–9, 10 |
 
+Move the pointer or the highlight and the grid comes alive: the workspace you're on lifts, and the highlighted window pops out, growing to about a third of the card's width so you can read it.
+Near the screen edge it shifts inward to stay fully visible.
+The grid opens flat until you move.
+
 Cards list every workspace that has windows, plus your current one even when it is empty, plus the scratchpad at the end.
 A `+N` badge marks a tab group with N hidden tabs.
 

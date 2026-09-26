@@ -36,6 +36,12 @@ Compared with a compiled plugin:
 - **Click empty space in a card:** switches to that workspace. On the scratchpad card, it focuses the scratchpad's most recent window.
 - **Click the scrim, press Esc, or trigger again:** closes the overlay and changes nothing.
 - **Hover:** accent border on the window, and its title in a small chip at the bottom of the thumbnail. The current workspace's card gets a `●` and an accent header.
+- **Pop-out:** the card you're on lifts (1.05×, brighter box), and its highlighted window pops out above its neighbours.
+  - A popped window grows to about 35% of the card width, and always by 1.15× to 2×. Near the edge of the grid it is pushed back inside.
+  - It follows the highlight, so the arrow keys and Tab pop windows too. Hovering a card's empty space or header lifts that card without moving the highlight, so empty workspaces lift too.
+  - The grid opens flat: nothing lifts or pops until the pointer or a key moves.
+  - Only the picture grows. Hover areas keep the tile's real size, so a popped window never hides its neighbours from the pointer. Clicking the enlarged part of the popped window still opens it.
+  - The capture holds the window's full-resolution buffer, so a popped window shows real detail, not a blown-up thumbnail. No extra captures.
 - **Keyboard:**
   - Arrows or `h j k l` move the highlight to the nearest window in that direction, across cards.
   - `Tab` / `Shift+Tab` step through windows in reading order.
@@ -62,9 +68,9 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   Overview.qml       overlay entry: open()/close()/dismiss()/toggle(), `opened`, data refresh,
                      PanelWindow, keyboard handling, highlight state
   WorkspaceCard.qml  one card: header (number / "scratchpad", ● if current), work-area box,
-                     click on empty space switches workspace, Repeater of WindowThumb
+                     click on empty space switches workspace, lift when focused, Repeater of WindowThumb
   WindowThumb.qml    ScreencopyView snapshot + icon/title fallback, hover and highlight border,
-                     title chip, +N group badge, click to jump
+                     title chip, +N group badge, pop-out, click to jump
   BarWidget.qml      WidgetButton with a grid glyph (Nerd Font nf-md-view_grid);
                      a left click toggles the overlay
   Model.js           all pure logic (.pragma library, ES5 only); tested under node
@@ -125,6 +131,9 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
 - `gridLayout(n, availW, availH, aspect, gap, headerH)` → `{ cols, rows, cardW, boxH, cardH, cells }`, with the column count chosen to make cards as large as possible and the last row centered. For example, 8 cards on 1920x1200 gives 3×3.
 - `flattenWindows(cards)` → `[{ card, win, address }]` in reading order (top to bottom, then left to right, per card). Keyboard navigation and Tab work on this list.
 - `navigate(points, fromIndex, dir)` → the nearest point whose center lies in direction `dir`. Score is distance along the axis plus twice the sideways offset. `stepIndex(count, from, delta)` wraps for Tab.
+- `popoutTransform(rect, bounds, cardW, lift, pivot)` → `{ scale, x, y }` for the popped window.
+  - `rect` is the tile and `bounds` the grid area, both in grid coordinates. The target is `POP_TARGET_FRACTION` (0.35) of `cardW`, clamped to `POP_MIN_SCALE` (1.15) and `POP_MAX_SCALE` (2), and never larger than `bounds`.
+  - The card is itself scaled by `lift` around `pivot`, so the result is in the card's unscaled space: the tile's scale around its center plus an x/y offset. After the lift, the window lands at the target size, pushed inside `bounds`.
 - `resolveActiveAddress(clients, preferred)` → `preferred` (normally `Hyprland.activeToplevel`) if it is drawn, else `mostRecentAddress(clients)`, the lowest `focusHistoryID`. `initialIndex(flat, address)` turns that into the starting highlight.
 - `focusWindowCmd(addr, usingLua)`:
   - Lua config: `hl.dsp.focus({ window = "address:0x…" })`.
@@ -158,6 +167,11 @@ The repo root is the plugin directory, the same convention as `004_Unifi_Plugin`
   - Sizes and type: `Style.spacing.*`, `Style.space()`, `Style.font.*`.
   - No hex literals anywhere.
 - **Hover:** use `PointerMoveGate` (`/usr/share/omarchy/shell/Ui/PointerMoveGate.qml`) so the window under a still pointer doesn't grab the highlight when the overlay opens.
+  - Its `referenceItem` is the unscaled backdrop. Measured in `content` coordinates, the 0.97 → 1 open animation made a still pointer look like it moved 10+ px, and the window under it grabbed the highlight (and popped out).
+- **Pop-out:** `Overview.focusCard` is the card the user is on (-1 on open). Keys and pointer selection set it to the selection's card; hovering a card's empty space sets it directly.
+  - A card with `focusCard === index` scales by `cardLift` (1.05). Its selected window (once `selectionTouched`) takes `Model.popoutTransform` on an inner `visual` Item. The hover `MouseArea` stays on the unscaled tile.
+  - `z` is 2 while lifted or popped and 1 while shrinking back, so the outgoing one stays above flat neighbours. The box no longer clips; `relativeRect` already keeps tiles inside it.
+  - 140 ms `OutCubic` on scale and offset, the same as the open animation.
 - **Keys:** handled by a `keyCatcher` Item with `Keys.priority: Keys.BeforeItem`, as in Emojis.
 - **Animation:** a 140 ms opacity fade and 0.97 → 1 scale in QML, easing `OutCubic`.
   - Turn off the compositor's layer animation, as Omarchy does for its own overlays.
@@ -258,6 +272,7 @@ Verified live:
 
 Not yet tried:
 - Mouse clicks on windows and on empty card space.
+- Hover pop-out: moving the pointer across tiles pops each one, hovering an empty card or header lifts it, and clicking the enlarged edge of a popped window opens that window. Hyprland's `hl.dsp.cursor.move` warp doesn't send pointer motion to the overlay, so this is checked by hand.
 - Tab.
 - The physical SUPER+` press and the bar button.
 - The edge cases in (7).

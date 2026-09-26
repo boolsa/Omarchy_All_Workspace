@@ -16,8 +16,8 @@ Originally built for one laptop (1920x1200), but multi-monitor input must not cr
 ```
 manifest.json      id boolsa.overview · kinds [overlay, bar-widget] · loaded on demand (no keepLoaded)
 Overview.qml       overlay entry: open/close/dismiss/toggle, Hyprland wiring, keys, PanelWindow
-WorkspaceCard.qml  one workspace: header + miniature box; empty-space click activates the card
-WindowThumb.qml    one window: ScreencopyView snapshot, icon fallback, title chip, click to jump
+WorkspaceCard.qml  one workspace: header + miniature box; lifts when focused; empty-space click activates the card
+WindowThumb.qml    one window: ScreencopyView snapshot, icon fallback, title chip, pop-out, click to jump
 BarWidget.qml      grid glyph in the bar; runs `omarchy-shell shell toggle boolsa.overview`
 Model.js           pure layout/order/navigation/dispatch logic; node-testable; `.pragma library`
 tests/             node:test files + fixtures/ (hyprctl -j output, titles scrubbed) + synthetic-*
@@ -82,4 +82,5 @@ The remote is the private repo `github.com/boolsa/Omarchy_All_Workspace` (`origi
 - `wtype` sends keys through a virtual keyboard with its own keymap.
   - Keys delivered to the open overlay arrive correctly (arrows, Enter, digits, Esc all verified).
   - Hyprland resolves **binds** against the physical keymap, so `wtype -M logo -k grave` fired SUPER+Escape (the system menu) instead of this plugin's bind. Test the binding by hand.
+- The pointer can't be scripted here: `hyprctl dispatch 'hl.dsp.cursor.move({ x = …, y = … })'` warps the cursor but sends no motion to the overlay, and there is no virtual-pointer tool installed. Test hover and pop-out by hand.
 - Only send keys after confirming the overlay has focus: `hyprctl layers -j | grep -q '"boolsa-overview"'`. Otherwise the keys go to whatever terminal is focused.
