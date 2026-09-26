@@ -37,6 +37,10 @@ Item {
   // first build on open runs on lastIpcObjects from before the refresh reply.
   property bool selectionTouched: false
   readonly property int selectedIndex: indexOfAddress(selectedAddress)
+  // The card the user is on: it lifts, and only there does the selected
+  // window pop out. -1 (nothing lifted) until the pointer or keys move, so
+  // the grid opens flat.
+  property int focusCard: -1
 
   // The menu scrim is tuned for a small card; a full-screen grid of
   // thumbnails needs the desktop behind it dimmed much further to read.
@@ -54,6 +58,11 @@ Item {
   readonly property real gridAspect: activeAspect()
   readonly property var grid: Model.gridLayout(cards.length, gridArea.width, gridArea.height, gridAspect, cardGap, headerHeight)
   readonly property QtObject pointerGate: gate
+  // Hover pop-out: the focused card grows by cardLift, and its selected
+  // window by Model.popoutTransform, kept inside popBounds (grid coordinates).
+  readonly property real cardLift: 1.05
+  readonly property int popDuration: 140
+  readonly property var popBounds: ({ x: 0, y: 0, w: gridArea.width, h: gridArea.height })
 
   // Events that change what the overview shows. screencast/screencastv2 are
   // deliberately absent: every ScreencopyView capture emits them, and
@@ -79,6 +88,7 @@ Item {
       ? Model.normalizeAddress(Hyprland.activeToplevel.address) : ""
     root.selectedAddress = ""
     root.selectionTouched = false
+    root.focusCard = -1
     Hyprland.refreshMonitors()
     Hyprland.refreshWorkspaces()
     Hyprland.refreshToplevels()
@@ -91,6 +101,7 @@ Item {
 
   function close() {
     root.opened = false
+    root.focusCard = -1
     root.cards = []
     root.flat = []
     root.cardsKey = ""
@@ -145,12 +156,15 @@ Item {
       root.cardsKey = key
       root.cards = cards
       root.flat = Model.flattenWindows(cards)
+      if (root.focusCard >= cards.length) root.focusCard = -1
     }
 
     if (!root.selectionTouched || root.indexOfAddress(root.selectedAddress) < 0) {
       var start = Model.initialIndex(root.flat, activeAddress)
       root.selectedAddress = start >= 0 ? root.flat[start].address : ""
     }
+    // Cards can reorder; once the user has moved, stay on the selection's card.
+    if (root.selectionTouched) root.focusSelectionCard()
   }
 
   function activeAspect() {
@@ -190,16 +204,29 @@ Item {
     return points
   }
 
+  function focusSelectionCard() {
+    var index = root.indexOfAddress(root.selectedAddress)
+    if (index >= 0) root.focusCard = root.flat[index].card
+  }
+
   function selectIndex(index) {
     if (index < 0 || index >= root.flat.length) return
     root.selectedAddress = root.flat[index].address
     root.selectionTouched = true
+    root.focusSelectionCard()
     gate.reset()
   }
 
   function selectAddress(address) {
     root.selectedAddress = address
     root.selectionTouched = true
+    root.focusSelectionCard()
+  }
+
+  // Pointer over a card's empty space (or header): lift it without moving
+  // the selection, so an empty workspace can lift too.
+  function hoverCard(index) {
+    if (index >= 0 && index < root.cards.length) root.focusCard = index
   }
 
   function moveSelection(dir) {

@@ -370,6 +370,58 @@ function gridLayout(count, availW, availH, aspect, gap, headerH) {
   return {cols: bestCols, rows: bestRows, cardW: bestW, boxH: boxH, cardH: cardH, cells: cells};
 }
 
+// ---- hover pop-out ---------------------------------------------------------
+
+// The selected window grows until it is this fraction of its card's width,
+// but always by at least POP_MIN_SCALE and never past POP_MAX_SCALE.
+var POP_TARGET_FRACTION = 0.35;
+var POP_MIN_SCALE = 1.15;
+var POP_MAX_SCALE = 2;
+
+function identityPop() {
+  return {scale: 1, x: 0, y: 0};
+}
+
+// Start of a span of `size` placed as close to `start` as fits in
+// [lo, lo + span]; centered when it cannot fit at all.
+function fitSpan(start, size, lo, span) {
+  if (size >= span) return lo + (span - size) / 2;
+  return clamp(start, lo, lo + span - size);
+}
+
+// How the selected window pops out. `rect` is its tile and `bounds` the area
+// the popped window must stay inside, both {x, y, w, h} in grid coordinates.
+// Its card is itself scaled by `lift` around `pivot` (grid coordinates), so
+// the result is in the card's unscaled space: use it as the tile's scale
+// (around the tile center) and x/y offset. After the card's lift, the window
+// lands at the target size, centered on its tile unless that would overflow
+// `bounds`, in which case it is pushed back inside.
+function popoutTransform(rect, bounds, cardW, lift, pivot) {
+  if (!isObj(rect) || !isObj(bounds)) return identityPop();
+  var w = num(rect.w, 0);
+  var h = num(rect.h, 0);
+  var bw = num(bounds.w, 0);
+  var bh = num(bounds.h, 0);
+  if (w <= 0 || h <= 0 || bw <= 0 || bh <= 0) return identityPop();
+  var bx = num(bounds.x, 0);
+  var by = num(bounds.y, 0);
+  var l = num(lift, 1);
+  if (l <= 0) l = 1;
+
+  var s = clamp(num(cardW, 0) * POP_TARGET_FRACTION / w, POP_MIN_SCALE, POP_MAX_SCALE);
+  s = Math.max(1, Math.min(s, bw / w, bh / h));
+  var fw = w * s;
+  var fh = h * s;
+  var cx = num(rect.x, 0) + w / 2;
+  var cy = num(rect.y, 0) + h / 2;
+  var tx = fitSpan(cx - fw / 2, fw, bx, bw) + fw / 2;
+  var ty = fitSpan(cy - fh / 2, fh, by, bh) + fh / 2;
+
+  var px = isObj(pivot) ? num(pivot.x, cx) : cx;
+  var py = isObj(pivot) ? num(pivot.y, cy) : cy;
+  return {scale: s / l, x: px + (tx - px) / l - cx, y: py + (ty - py) / l - cy};
+}
+
 // ---- keyboard navigation ---------------------------------------------------
 
 function rectOf(win) {

@@ -110,7 +110,8 @@ function shuffled(list, seed) {
 test('Model.js exposes the functions the QML depends on', () => {
   const names = ['normalizeAddress', 'isSpecialWorkspace', 'workspaceLabel', 'workAreaFor', 'relativeRect',
     'buildOverview', 'gridLayout', 'flattenWindows', 'initialIndex', 'navigate', 'stepIndex',
-    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd', 'mostRecentAddress', 'resolveActiveAddress'];
+    'focusWindowCmd', 'focusWorkspaceCmd', 'mostRecentWindow', 'cardActivationCmd', 'mostRecentAddress', 'resolveActiveAddress',
+    'popoutTransform'];
   for (const name of names) assert.equal(typeof M[name], 'function', name);
 });
 
@@ -691,6 +692,114 @@ test('gridLayout returns an empty layout for invalid input', () => {
   // Missing gap/header default to 0.
   const g = plain(M.gridLayout(2, 1000, 400, 2));
   assert.deepEqual([g.cols, g.rows, g.cardW, g.boxH, g.cardH], [2, 1, 500, 250, 250]);
+});
+
+// ---- popoutTransform -------------------------------------------------------
+
+// Where the popped window ends up on screen: the tile scaled by t.scale
+// around its center and moved by (t.x, t.y), then the whole card scaled by
+// `lift` around `pivot`. Independent of the implementation's algebra.
+function poppedRect(t, rect, lift = 1, pivot = null) {
+  const p = pivot || {x: rect.x + rect.w / 2, y: rect.y + rect.h / 2};
+  const cx = rect.x + rect.w / 2 + t.x;
+  const cy = rect.y + rect.h / 2 + t.y;
+  const w = rect.w * t.scale * lift;
+  const h = rect.h * t.scale * lift;
+  const fx = p.x + (cx - p.x) * lift;
+  const fy = p.y + (cy - p.y) * lift;
+  return {x: fx - w / 2, y: fy - h / 2, w, h};
+}
+
+function assertInside(r, b, label) {
+  assert.ok(r.x >= b.x - 1e-6 && r.y >= b.y - 1e-6, label + ' top-left inside: ' + JSON.stringify(r));
+  assert.ok(r.x + r.w <= b.x + b.w + 1e-6 && r.y + r.h <= b.y + b.h + 1e-6,
+    label + ' bottom-right inside: ' + JSON.stringify(r));
+}
+
+const popBounds = {x: 0, y: 0, w: 1800, h: 1000};
+
+test('popoutTransform grows a small window to 35% of the card width', () => {
+  const rect = {x: 400, y: 300, w: 150, h: 100};
+  const t = plain(M.popoutTransform(rect, popBounds, 600, 1, null));
+  assert.ok(Math.abs(t.scale - 1.4) < EPS, 'scale ' + t.scale);
+  // Room on every side: stays centered on its tile.
+  assert.ok(Math.abs(t.x) < EPS && Math.abs(t.y) < EPS, JSON.stringify(t));
+  const r = poppedRect(t, rect);
+  assert.ok(Math.abs(r.w - 210) < EPS);
+});
+
+test('popoutTransform pops big windows by the minimum and caps tiny ones', () => {
+  const big = plain(M.popoutTransform({x: 100, y: 100, w: 500, h: 300}, popBounds, 600, 1, null));
+  assert.ok(Math.abs(big.scale - 1.15) < EPS, 'big ' + big.scale);
+  const tiny = plain(M.popoutTransform({x: 100, y: 100, w: 20, h: 20}, popBounds, 600, 1, null));
+  assert.ok(Math.abs(tiny.scale - 2) < EPS, 'tiny ' + tiny.scale);
+});
+
+test('popoutTransform folds in the card lift so the net size is unchanged', () => {
+  const rect = {x: 400, y: 300, w: 150, h: 100};
+  const pivot = {x: 450, y: 320};
+  const plainT = plain(M.popoutTransform(rect, popBounds, 600, 1, null));
+  const lifted = plain(M.popoutTransform(rect, popBounds, 600, 1.05, pivot));
+  const a = poppedRect(plainT, rect);
+  const b = poppedRect(lifted, rect, 1.05, pivot);
+  for (const k of ['x', 'y', 'w', 'h']) assert.ok(Math.abs(a[k] - b[k]) < 1e-6, k + ': ' + a[k] + ' vs ' + b[k]);
+});
+
+test('popoutTransform pushes windows at the edges back inside the bounds', () => {
+  const edges = [
+    {x: 0, y: 0, w: 150, h: 100},
+    {x: 1650, y: 0, w: 150, h: 100},
+    {x: 0, y: 900, w: 150, h: 100},
+    {x: 1650, y: 900, w: 150, h: 100},
+  ];
+  for (const rect of edges) {
+    const pivot = {x: rect.x + 100, y: rect.y + 50};
+    const t = plain(M.popoutTransform(rect, popBounds, 600, 1.05, pivot));
+    const r = poppedRect(t, rect, 1.05, pivot);
+    assert.ok(Math.abs(r.w - 210) < 1e-6, 'still full size at ' + JSON.stringify(rect));
+    assertInside(r, popBounds, JSON.stringify(rect));
+  }
+});
+
+test('popoutTransform never outgrows the bounds', () => {
+  // A window as tall as the bounds cannot grow at all.
+  const tall = {x: 100, y: 0, w: 100, h: 1000};
+  const t = plain(M.popoutTransform(tall, popBounds, 600, 1, null));
+  assert.equal(t.scale, 1);
+  assertInside(poppedRect(t, tall), popBounds, 'tall');
+});
+
+test('popoutTransform keeps random windows inside the bounds and between 1x and 2x', () => {
+  let s = 7;
+  const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let i = 0; i < 500; i++) {
+    const w = 5 + rnd() * 600;
+    const h = 5 + rnd() * 400;
+    const rect = {x: rnd() * (popBounds.w - w), y: rnd() * (popBounds.h - h), w, h};
+    const pivot = {x: rect.x + rnd() * 200 - 100, y: rect.y + rnd() * 200 - 100};
+    const lift = 1 + rnd() * 0.1;
+    const t = plain(M.popoutTransform(rect, popBounds, 600, lift, pivot));
+    const r = poppedRect(t, rect, lift, pivot);
+    const net = t.scale * lift;
+    assert.ok(net >= 1 - EPS && net <= 2 + EPS, 'net scale ' + net);
+    assertInside(r, popBounds, 'case ' + i);
+  }
+});
+
+test('popoutTransform returns the identity for invalid input', () => {
+  const id = {scale: 1, x: 0, y: 0};
+  const good = {x: 10, y: 10, w: 100, h: 50};
+  const cases = [
+    [null, popBounds], [good, null], [{x: 0, y: 0, w: 0, h: 10}, popBounds],
+    [{x: 0, y: 0, w: 10, h: -1}, popBounds], [{x: 0, y: 0, w: NaN, h: 10}, popBounds],
+    [good, {x: 0, y: 0, w: 0, h: 100}], [good, {}], [undefined, undefined],
+  ];
+  for (const [rect, bounds] of cases) {
+    assert.deepEqual(plain(M.popoutTransform(rect, bounds, 600, 1, null)), id, JSON.stringify([rect, bounds]));
+  }
+  // A bad lift is treated as no lift; a missing card width pops by the minimum.
+  const t = plain(M.popoutTransform(good, popBounds, undefined, -2, null));
+  assert.ok(Math.abs(t.scale - 1.15) < EPS);
 });
 
 // ---- flattenWindows / initialIndex -----------------------------------------

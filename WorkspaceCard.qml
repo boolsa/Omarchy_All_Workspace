@@ -6,7 +6,8 @@ import qs.Commons
 // One workspace: a header strip over a miniature of its monitor's work area.
 // Windows sit at their real relative positions. Clicking empty space switches
 // to the workspace, or for scratchpad and named cards focuses its latest
-// window (Model.cardActivationCmd).
+// window (Model.cardActivationCmd). The focused card lifts above its
+// neighbours; its selected window pops out further (WindowThumb).
 Item {
   id: card
 
@@ -16,9 +17,21 @@ Item {
 
   readonly property bool current: modelData.isActive === true
   readonly property int windowCount: modelData.windows ? modelData.windows.length : 0
+  readonly property bool lifted: overview !== null && overview.focusCard === index
+
+  // Lifted on top; while settling back down, still above the flat cards.
+  z: lifted ? 2 : (scale !== 1 ? 1 : 0)
+  scale: lifted ? overview.cardLift : 1
+  Behavior on scale {
+    NumberAnimation { duration: card.overview.popDuration; easing.type: Easing.OutCubic }
+  }
 
   MouseArea {
     anchors.fill: parent
+    hoverEnabled: true
+    onPositionChanged: function(mouse) {
+      if (card.overview.pointerGate.moved(card, mouse)) card.overview.hoverCard(card.index)
+    }
     onClicked: card.overview.activateCard(card.index)
   }
 
@@ -58,16 +71,19 @@ Item {
     width: parent.width
     height: card.overview.grid.boxH
     radius: card.overview.cornerRadius
-    color: Util.alpha(card.overview.foreground, 0.05)
+    color: Util.alpha(card.overview.foreground, card.lifted ? 0.09 : 0.05)
     border.width: card.current ? 2 : 1
-    border.color: card.current ? card.overview.accent : Util.alpha(card.overview.foreground, 0.18)
-    clip: true
+    border.color: card.current ? card.overview.accent
+      : Util.alpha(card.overview.foreground, card.lifted ? 0.4 : 0.18)
+    // No clip: Model.relativeRect keeps every tile inside the box, and the
+    // popped-out window has to reach past it.
 
     Repeater {
       model: card.modelData.windows
 
       WindowThumb {
         overview: card.overview
+        workspace: card
         x: Math.round(modelData.rect.x * box.width)
         y: Math.round(modelData.rect.y * box.height)
         width: Math.max(1, Math.round(modelData.rect.w * box.width))
