@@ -280,9 +280,12 @@ Item {
     event.accepted = handled
   }
 
+  // Measured against the unscaled backdrop: `content` scales during the open
+  // animation and cards lift on focus, so in their coordinates a still
+  // pointer would look like it moved and grab the selection.
   PointerMoveGate {
     id: gate
-    referenceItem: content
+    referenceItem: backdrop
   }
 
   Timer {
@@ -362,6 +365,7 @@ Item {
     exclusionMode: ExclusionMode.Ignore
 
     Rectangle {
+      id: backdrop
       anchors.fill: parent
       color: root.scrim
     }
